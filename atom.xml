@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>黄钊君の博客</title>
+  
+  
+  <link href="http://yoursite.com/atom.xml" rel="self"/>
+  
+  <link href="http://yoursite.com/"/>
+  <updated>2020-08-24T13:09:44.912Z</updated>
+  <id>http://yoursite.com/</id>
+  
+  <author>
+    <name>hz</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>消息队列</title>
+    <link href="http://yoursite.com/2020/08/24/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"/>
+    <id>http://yoursite.com/2020/08/24/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/</id>
+    <published>2020-08-24T12:30:17.000Z</published>
+    <updated>2020-08-24T13:09:44.912Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="1-定义"><a href="#1-定义" class="headerlink" title="1 定义"></a>1 定义</h2><p>消息队列：是一种数据结构</p><p>生产者：把数据放入到队列中的一方</p><p>消费者：把数据从队列中取出的一方</p><h3 id="2-存在的意义"><a href="#2-存在的意义" class="headerlink" title="2 存在的意义"></a>2 存在的意义</h3><h4 id="2-1-解耦"><a href="#2-1-解耦" class="headerlink" title="2.1 解耦"></a>2.1 解耦</h4><p>场景一：</p><p>存在三个系统</p><p>a系统要给b系统发送数据，调用系统b的接口</p><p>a系统要给c系统发送数据，调用系统c的接口</p><p>如果有一天b不需要a的数据了，就需要让a注释掉掉b接口的代码</p><p>如果新增系统d要接受数据，又要增加调用系统d的代码</p><p><strong>这些调用逻辑都是一些重复的不可避免的劳动</strong></p><p>此处的a系统与bcd系统高度耦合了，因为之间的数据交互如果需要修改，或者接受数据的系统出现了问题，那么a系统的调用逻辑还要思考需不需要继续发送数据</p><p>场景二：</p><p>在上述场景加入消息队列，消息队列是生产者（a系统）与消费者（bcd系统）之间的一个数据交互中转站</p><p>a系统发布消息，bcd订阅消息，如果不需要订阅就取消订阅即可，并不需要修改发布消息的代码</p><h4 id="2-2-异步"><a href="#2-2-异步" class="headerlink" title="2.2 异步"></a>2.2 异步</h4><p>消息队列是一个异步任务，如果a系统要完成<strong>产生数据（100ms）</strong>，<strong>发送数据至系统b（300ms）</strong>，<strong>发送数据至系统c（300ms）</strong></p><p>此时a系统完成消息发送是一个同步任务，完成时间是100+300+300=700ms</p><p>如果用了消息队列，a系统只要产生消息，并发送至消息队列，由消息队列异步回调订阅过的系统接口</p><p>此时a系统完成发送消息的时间是100ms</p><h4 id="2-3-削峰-限流"><a href="#2-3-削峰-限流" class="headerlink" title="2.3 削峰/限流"></a>2.3 削峰/限流</h4><p>如果有一个商场网站出了促销活动，此时每秒的请求数是5000，一般的mysql只能处理2000个左右的并发。</p><p>此时在用户与mysql之间加入mq，它可以接受者5000个请求，但是只给mysql发送2000个。</p><p>就像一个喷水的管子，如果突然流水量过大，管子就会裂开，我们通过开关把水流量放小一点就问题不大，但是我们要知道，在这个开关后水压还是这么大，mq做到的只是限制最大量。</p><h4 id="2-4-其他应用场景"><a href="#2-4-其他应用场景" class="headerlink" title="2.4 其他应用场景"></a>2.4 其他应用场景</h4><ul><li><strong>日志处理</strong>：将大量日志存储到消息队列中（一般采用分布式消息队列kafka），解决大量日志传输的问题。其中，消息队列负责日志数据的接收，存储和转发；</li><li><strong>消息通讯</strong>：点对点通讯或聊天室通讯。</li></ul><h3 id="3-使用消息队列会有什么优缺点"><a href="#3-使用消息队列会有什么优缺点" class="headerlink" title="3 使用消息队列会有什么优缺点"></a>3 使用消息队列会有什么优缺点</h3><p>优点其实就是上文中谈到的，在特殊场景下的应用好处，解耦、异步与削峰等。</p><p><strong>系统可用性</strong>：<br> 系统因为依赖与MQ消息队列这个服务，若这个服务崩溃了，那么我们的整个系统将不可用。为此往往我们都是通过集群/分布式部署来实现MQ高可用的。</p><p>高可用：通常来描述一个系统经过专门的设计，从而减少停工时间，而保持其服务的高度可用性</p><p><strong>系统复杂度</strong>：<br> 我们将数据写到消息队列上，就有可能会存在数据丢失的情况。以及我们如何保证消息没有被重复消费等问题。</p><p><strong>一致性问题</strong>：<br> A系统将请求写入到消息队列后就返回请求成功了，假设在多机部署的时候，系统B、C写库成功，假设D写入失败了，这种情况下就会产生数据不一致的问题。</p><p><a href="https://www.jianshu.com/p/ec7c2503c3ef">https://www.jianshu.com/p/ec7c2503c3ef</a></p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;h2 id=&quot;1-定义&quot;&gt;&lt;a href=&quot;#1-定义&quot; class=&quot;headerlink&quot; title=&quot;1 定义&quot;&gt;&lt;/a&gt;1 定义&lt;/h2&gt;&lt;p&gt;消息队列：是一种数据结构&lt;/p&gt;
+&lt;p&gt;生产者：把数据放入到队列中的一方&lt;/p&gt;
+&lt;p&gt;消费者：把数据从队列中取出的一方&lt;/</summary>
+      
+    
+    
+    
+    <category term="每日学习" scheme="http://yoursite.com/categories/%E6%AF%8F%E6%97%A5%E5%AD%A6%E4%B9%A0/"/>
+    
+    
+    <category term="数据库" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+  </entry>
+  
+</feed>
