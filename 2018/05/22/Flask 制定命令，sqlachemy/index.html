@@ -1,0 +1,688 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="爱肖彤真是太好了"><meta name="copyright" content="爱肖彤真是太好了"><meta name="generator" content="Hexo 5.1.1"><meta name="theme" content="hexo-theme-yun"><title>Flask 制定命令，sqlachemy | 工藤旧二の博客</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="none" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.19/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_stqaphw3j4.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link rel="shortcut icon" type="image/svg+xml" href="/task/yun.ico"><link rel="mask-icon" href="/task/yun.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/task/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/task/js/utils.js" as="script"><link rel="preload" href="/task/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/task/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" href="/task/css/hexo-theme-yun.css"><link rel="alternate" href="/task/atom.xml" title="工藤旧二の博客" type="application/atom+xml"><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"root":"/task/","title":"工藤旧二の博客","version":"0.9.7","anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"local_search":{"path":"/task/search.xml"},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><meta name="description" content="一、flask-script（制定命令）这是为了模拟类似django在命令行启动项目的方式 需要安装 pip install flask-script 使用 from flask import Flask from flask_script import Manager app &#x3D; Flask(__name__) if __name__ &#x3D;&#x3D; &#39;__main__&#39;:     manager &#x3D; M">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flask 制定命令，sqlachemy">
+<meta property="og:url" content="http://huang_zhao.gitee.io/task/2018/05/22/Flask%20%E5%88%B6%E5%AE%9A%E5%91%BD%E4%BB%A4%EF%BC%8Csqlachemy/index.html">
+<meta property="og:site_name" content="工藤旧二の博客">
+<meta property="og:description" content="一、flask-script（制定命令）这是为了模拟类似django在命令行启动项目的方式 需要安装 pip install flask-script 使用 from flask import Flask from flask_script import Manager app &#x3D; Flask(__name__) if __name__ &#x3D;&#x3D; &#39;__main__&#39;:     manager &#x3D; M">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-05-22T01:50:41.000Z">
+<meta property="article:modified_time" content="2020-09-04T11:21:41.244Z">
+<meta property="article:author" content="爱肖彤真是太好了">
+<meta property="article:tag" content="python">
+<meta property="article:tag" content="flask">
+<meta property="article:tag" content="python框架">
+<meta name="twitter:card" content="summary"><script src="/task/js/ui/mode.js"></script><link rel="stylesheet" href="/task/css/prism.css" type="text/css"></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script defer src="/task/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/task/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/task/about/" title="爱肖彤真是太好了"><img width="96" loading="lazy" src="/task/Yun.png" alt="爱肖彤真是太好了"></a><div class="site-author-name"><a href="/task/about/">爱肖彤真是太好了</a></div><a class="site-name" href="/task/about/site.html">工藤旧二の博客</a><sub class="site-subtitle"></sub><div class="site-desciption"></div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/task/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/task/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">22</span></a></div><div class="site-state-item"><a href="/task/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">1</span></a></div><div class="site-state-item"><a href="/task/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">25</span></a></div><a class="site-state-item hty-icon-button" target="_blank" rel="noopener" href="https://yun.yunyoujun.cn" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-settings-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" title="RSS" target="_blank" style="color:orange"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-rss-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="QQ" target="_blank" style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="GitHub" target="_blank" style="color:#6e5494"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-github-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="微博" target="_blank" style="color:#E6162D"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-weibo-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="豆瓣" target="_blank" style="color:#007722"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-douban-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://music.163.com/#/user/home?id=552858287" title="网易云音乐" target="_blank" style="color:#C20C0C"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-netease-cloud-music-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="知乎" target="_blank" style="color:#0084FF"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-zhihu-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://space.bilibili.com/15081363" title="哔哩哔哩" target="_blank" style="color:#FF8EB3"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bilibili-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="Twitter" target="_blank" style="color:#1da1f2"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-twitter-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="Telegram Channel" target="_blank" style="color:#0088CC"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-telegram-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="E-Mail" target="_blank" style="color:#8E71C1"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-mail-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="Travelling" target="_blank" style="color:var(--hty-text-color)"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-send-plane-2-line"></use></svg></a></div><hr style="margin:0.5rem 1rem"><div class="links"><a class="links-item hty-icon-button" href="/task/links/" title="我的小伙伴们" style="color:dodgerblue"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-genderless-line"></use></svg></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81flask-script%EF%BC%88%E5%88%B6%E5%AE%9A%E5%91%BD%E4%BB%A4%EF%BC%89"><span class="toc-text">一、flask-script（制定命令）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81sqlachemy"><span class="toc-text">二、sqlachemy</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%A6%82%E5%BF%B5"><span class="toc-text">1 概念</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%EF%BC%88%E5%8E%9F%E7%94%9Fsql%EF%BC%89"><span class="toc-text">2 基本使用（原生sql）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-orm%E4%BD%BF%E7%94%A8"><span class="toc-text">3 orm使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8"><span class="toc-text">4 线程安全</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E5%9F%BA%E6%9C%AC%E5%A2%9E%E5%88%A0%E6%94%B9%E6%9F%A5"><span class="toc-text">5 基本增删改查</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-%E9%AB%98%E7%BA%A7%E6%93%8D%E4%BD%9C"><span class="toc-text">6 高级操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-%E5%A4%9A%E8%A1%A8%E6%93%8D%E4%BD%9C"><span class="toc-text">7 多表操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-models-py"><span class="toc-text">8 models.py</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-flask-sqlachemy"><span class="toc-text">9 flask-sqlachemy</span></a></li></ol></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="http://huang_zhao.gitee.io/task/task/2018/05/22/Flask%20%E5%88%B6%E5%AE%9A%E5%91%BD%E4%BB%A4%EF%BC%8Csqlachemy/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="爱肖彤真是太好了"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="工藤旧二の博客"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Flask 制定命令，sqlachemy</h1><div class="post-meta"><div class="post-time" style="display:block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2018-05-22 09:50:41" itemprop="dateCreated datePublished" datetime="2018-05-22T09:50:41+08:00">2018-05-22</time><span class="post-meta-divider">-</span><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-2-line"></use></svg></span> <time title="修改时间：2020-09-04 19:21:41" itemprop="dateModified" datetime="2020-09-04T19:21:41+08:00">2020-09-04</time></div><span class="post-count"><span class="post-symbolcount"><span class="post-meta-item-icon" title="本文字数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-file-word-line"></use></svg></span> <span title="本文字数">3.7k</span><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读时长"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-timer-line"></use></svg></span> <span title="阅读时长">17m</span></span></span><div class="post-classify"><span class="post-category"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span> <span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/task/categories/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">技术分享</span></a></span></span><span class="post-tag"><span class="post-meta-divider">-</span><a class="tag" href="/task/tags/python/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">python</span></a><a class="tag" href="/task/tags/flask/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">flask</span></a><a class="tag" href="/task/tags/python%E6%A1%86%E6%9E%B6/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">python框架</span></a></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><h2 id="一、flask-script（制定命令）"><a href="#一、flask-script（制定命令）" class="headerlink" title="一、flask-script（制定命令）"></a>一、flask-script（制定命令）</h2><p>这是为了模拟类似django在命令行启动项目的方式</p>
+<p>需要安装 <code>pip install flask-script</code></p>
+<p><strong>使用</strong></p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> flask <span class="token keyword">import</span> Flask
+<span class="token keyword">from</span> flask_script <span class="token keyword">import</span> Manager
+app <span class="token operator">=</span> Flask<span class="token punctuation">(</span>__name__<span class="token punctuation">)</span>
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">'__main__'</span><span class="token punctuation">:</span>
+    manager <span class="token operator">=</span> Manager<span class="token punctuation">(</span>app<span class="token punctuation">)</span>
+    manager<span class="token punctuation">.</span>run<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 修改启动文件后  就只能在命令行启动这个项目了</span>
+<span class="token comment" spellcheck="true"># python 启动文件名 runserver</span></code></pre>
+<p><strong>自定义命令</strong></p>
+<pre class=" language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 为函数加上装饰器即可</span>
+<span class="token comment" spellcheck="true"># 启动命令为 python 文件名 方法名 -参数名 参数</span>
+ @manager<span class="token punctuation">.</span>command
+ <span class="token keyword">def</span> <span class="token function">custom</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span><span class="token punctuation">:</span>
+     <span class="token keyword">print</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span>
+ @manager<span class="token punctuation">.</span>option<span class="token punctuation">(</span><span class="token string">'-n'</span><span class="token punctuation">,</span> <span class="token string">'--name'</span><span class="token punctuation">,</span> dest<span class="token operator">=</span><span class="token string">'name'</span><span class="token punctuation">)</span>
+ @manager<span class="token punctuation">.</span>option<span class="token punctuation">(</span><span class="token string">'-u'</span><span class="token punctuation">,</span> <span class="token string">'--url'</span><span class="token punctuation">,</span> dest<span class="token operator">=</span><span class="token string">'url'</span><span class="token punctuation">)</span>
+ <span class="token keyword">def</span> <span class="token function">cmd</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> url<span class="token punctuation">)</span><span class="token punctuation">:</span>
+     <span class="token keyword">print</span><span class="token punctuation">(</span>name<span class="token punctuation">,</span> url<span class="token punctuation">)</span></code></pre>
+<h2 id="二、sqlachemy"><a href="#二、sqlachemy" class="headerlink" title="二、sqlachemy"></a>二、sqlachemy</h2><h3 id="1-概念"><a href="#1-概念" class="headerlink" title="1 概念"></a>1 概念</h3><ul>
+<li>是一个第三方orm框架（对象关系映射）</li>
+<li>django中的orm只能在django内部自己使用，这个是可以集成到不同框架中</li>
+<li>orm不是一门语言特有的，每个语言都多多少少有几个orm框架</li>
+<li>sqlachemy本身无法操作数据库，需要pymysql等第三方插件</li>
+</ul>
+<p>flask使用sqlachemy要注意几个事情</p>
+<ol>
+<li>必须做成单例模式，否则数据库连接池就没意义了</li>
+<li>必须做到线程安全，每一个请求来只能使用自己的conn对象</li>
+<li>连接池中的链接用了几次最好杀一下，不然容易造成内存溢出</li>
+</ol>
+<h3 id="2-基本使用（原生sql）"><a href="#2-基本使用（原生sql）" class="headerlink" title="2 基本使用（原生sql）"></a>2 基本使用（原生sql）</h3><pre class=" language-python"><code class="language-python">
+<span class="token keyword">import</span> time
+<span class="token keyword">import</span> threading
+<span class="token keyword">import</span> sqlalchemy
+<span class="token keyword">from</span> sqlalchemy <span class="token keyword">import</span> create_engine
+<span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>engine<span class="token punctuation">.</span>base <span class="token keyword">import</span> Engine
+
+<span class="token comment" spellcheck="true"># 第一步生成一个engine对象</span>
+engine <span class="token operator">=</span> create_engine<span class="token punctuation">(</span>
+    <span class="token string">"mysql+pymysql://root:123@127.0.0.1:3306/flask?charset=utf8"</span><span class="token punctuation">,</span>
+    max_overflow<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 超过连接池大小外最多创建的连接</span>
+    pool_size<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 连接池大小</span>
+    pool_timeout<span class="token operator">=</span><span class="token number">30</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 池中没有线程最多等待的时间，否则报错</span>
+    pool_recycle<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>  <span class="token comment" spellcheck="true"># 多久之后对线程池中的线程进行一次连接的回收（重置）</span>
+<span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 第二步：创建连接（执行原生sql）</span>
+conn <span class="token operator">=</span> engine<span class="token punctuation">.</span>raw_connection<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 第三步：获取游标对象</span>
+cursor <span class="token operator">=</span> conn<span class="token punctuation">.</span>cursor<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 第四步：具体操作</span>
+cursor<span class="token punctuation">.</span>execute<span class="token punctuation">(</span><span class="token string">'select * from boy'</span><span class="token punctuation">)</span>
+
+res<span class="token operator">=</span>cursor<span class="token punctuation">.</span>fetchall<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>res<span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 比pymysql优势在，有数据库连接池</span></code></pre>
+<h3 id="3-orm使用"><a href="#3-orm使用" class="headerlink" title="3 orm使用"></a>3 orm使用</h3><pre class=" language-python"><code class="language-python"><span class="token keyword">import</span> datetime
+<span class="token keyword">from</span> sqlalchemy <span class="token keyword">import</span> create_engine
+<span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>ext<span class="token punctuation">.</span>declarative <span class="token keyword">import</span> declarative_base
+<span class="token comment" spellcheck="true"># 字段和字段属性</span>
+<span class="token keyword">from</span> sqlalchemy <span class="token keyword">import</span> Column<span class="token punctuation">,</span> Integer<span class="token punctuation">,</span> String<span class="token punctuation">,</span> Text<span class="token punctuation">,</span> ForeignKey<span class="token punctuation">,</span> DateTime<span class="token punctuation">,</span> UniqueConstraint<span class="token punctuation">,</span> Index
+
+<span class="token comment" spellcheck="true"># 制造了一个类，作为所有模型类的基类</span>
+Base <span class="token operator">=</span> declarative_base<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">class</span> <span class="token class-name">User</span><span class="token punctuation">(</span>Base<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    __tablename__ <span class="token operator">=</span> <span class="token string">'users'</span>  <span class="token comment" spellcheck="true"># 数据库表名称(固定写法)，如果不写，默认以类名小写作为表的名字</span>
+    id <span class="token operator">=</span> Column<span class="token punctuation">(</span>Integer<span class="token punctuation">,</span> primary_key<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># id 主键</span>
+    <span class="token comment" spellcheck="true"># mysql中主键自动建索引：聚簇索引</span>
+    <span class="token comment" spellcheck="true"># 其他建建的索引叫：辅助索引</span>
+    name <span class="token operator">=</span> Column<span class="token punctuation">(</span>String<span class="token punctuation">(</span><span class="token number">32</span><span class="token punctuation">)</span><span class="token punctuation">,</span> index<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span> nullable<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># name列，索引，不可为空</span>
+    <span class="token comment" spellcheck="true"># email = Column(String(32), unique=True)  # 唯一</span>
+    <span class="token comment" spellcheck="true"># #datetime.datetime.now不能加括号，加了括号，以后永远是当前时间</span>
+    <span class="token comment" spellcheck="true"># ctime = Column(DateTime, default=datetime.datetime.now) # default默认值</span>
+    <span class="token comment" spellcheck="true"># extra = Column(Text, nullable=True)</span>
+
+     <span class="token comment" spellcheck="true">#类似于djagno的 Meta</span>
+    <span class="token comment" spellcheck="true"># __table_args__ = (</span>
+    <span class="token comment" spellcheck="true">#     UniqueConstraint('id', 'name', name='uix_id_name'), #联合唯一</span>
+    <span class="token comment" spellcheck="true">#     Index('ix_id_name', 'name', 'email'), #索引</span>
+    <span class="token comment" spellcheck="true"># )</span>
+
+<span class="token comment" spellcheck="true"># 创建表</span>
+<span class="token keyword">def</span> <span class="token function">create_table</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># 创建engine对象</span>
+    engine <span class="token operator">=</span> create_engine<span class="token punctuation">(</span>
+        <span class="token string">"mysql+pymysql://root:123@127.0.0.1:3306/aaa?charset=utf8"</span><span class="token punctuation">,</span>
+        max_overflow<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 超过连接池大小外最多创建的连接</span>
+        pool_size<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 连接池大小</span>
+        pool_timeout<span class="token operator">=</span><span class="token number">30</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 池中没有线程最多等待的时间，否则报错</span>
+        pool_recycle<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>  <span class="token comment" spellcheck="true"># 多久之后对线程池中的线程进行一次连接的回收（重置）</span>
+    <span class="token punctuation">)</span>
+    <span class="token comment" spellcheck="true"># 通过engine对象创建表</span>
+    Base<span class="token punctuation">.</span>metadata<span class="token punctuation">.</span>create_all<span class="token punctuation">(</span>engine<span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 删除表</span>
+<span class="token keyword">def</span> <span class="token function">drop_table</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># 创建engine对象</span>
+    engine <span class="token operator">=</span> create_engine<span class="token punctuation">(</span>
+        <span class="token string">"mysql+pymysql://root:123@127.0.0.1:3306/aaa?charset=utf8"</span><span class="token punctuation">,</span>
+        max_overflow<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 超过连接池大小外最多创建的连接</span>
+        pool_size<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 连接池大小</span>
+        pool_timeout<span class="token operator">=</span><span class="token number">30</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 池中没有线程最多等待的时间，否则报错</span>
+        pool_recycle<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>  <span class="token comment" spellcheck="true"># 多久之后对线程池中的线程进行一次连接的回收（重置）</span>
+    <span class="token punctuation">)</span>
+    <span class="token comment" spellcheck="true"># 通过engine对象删除所有表</span>
+    Base<span class="token punctuation">.</span>metadata<span class="token punctuation">.</span>drop_all<span class="token punctuation">(</span>engine<span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">'__main__'</span><span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># create_table()</span>
+    drop_table<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+<h3 id="4-线程安全"><a href="#4-线程安全" class="headerlink" title="4 线程安全"></a>4 线程安全</h3><pre class=" language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 基于scoped_session实现线程安全</span>
+
+<span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>orm <span class="token keyword">import</span> sessionmaker
+<span class="token keyword">from</span> sqlalchemy <span class="token keyword">import</span> create_engine
+<span class="token keyword">from</span> models <span class="token keyword">import</span> User  <span class="token comment" spellcheck="true"># pycharm报错，不会影响我们</span>
+<span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>orm <span class="token keyword">import</span> scoped_session
+
+<span class="token comment" spellcheck="true"># 1 制作engine</span>
+engine <span class="token operator">=</span> create_engine<span class="token punctuation">(</span><span class="token string">"mysql+pymysql://root:123@127.0.0.1:3306/aaa"</span><span class="token punctuation">,</span> max_overflow<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">,</span> pool_size<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 2 制造一个 session 类（会话）</span>
+Session <span class="token operator">=</span> sessionmaker<span class="token punctuation">(</span>bind<span class="token operator">=</span>engine<span class="token punctuation">)</span>    <span class="token comment" spellcheck="true"># 得到一个类</span>
+<span class="token comment" spellcheck="true"># 3 得到一个session对象（线程安全的session）</span>
+<span class="token comment" spellcheck="true">#现在的session已经不是session对象了</span>
+<span class="token comment" spellcheck="true">#为什么线程安全，还是用的local</span>
+session <span class="token operator">=</span> scoped_session<span class="token punctuation">(</span>Session<span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># session=Session()</span>
+
+<span class="token comment" spellcheck="true"># 4 创建一个对象</span>
+obj1 <span class="token operator">=</span> User<span class="token punctuation">(</span>name<span class="token operator">=</span><span class="token string">"2008"</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 5 把对象通过add放入</span>
+session<span class="token punctuation">.</span>add<span class="token punctuation">(</span>obj1<span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># session.aaa()</span>
+<span class="token comment" spellcheck="true"># 6 提交</span>
+session<span class="token punctuation">.</span>commit<span class="token punctuation">(</span><span class="token punctuation">)</span>
+session<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+
+<span class="token comment" spellcheck="true"># 类不继承Session类，但是有该类的所有方法（通过反射，一个个放进去）</span>
+
+<span class="token comment" spellcheck="true"># scoped_session.add------->instrument(name)--->do函数内存地址---》现在假设我要这么用：session.add()--->do()</span>
+<span class="token comment" spellcheck="true"># scoped_session.close----->instrument(name)--->do函数内存地址</span></code></pre>
+<h3 id="5-基本增删改查"><a href="#5-基本增删改查" class="headerlink" title="5 基本增删改查"></a>5 基本增删改查</h3><pre class=" language-PYTHON"><code class="language-PYTHON">from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from models import User,Person,Hobby
+from sqlalchemy.orm import scoped_session
+from sqlalchemy.sql import text
+engine = create_engine("mysql+pymysql://root:123@127.0.0.1:3306/aaa", max_overflow=0, pool_size=5)
+
+Session = sessionmaker(bind=engine)
+# session = scoped_session(Session)
+session=Session()
+
+####1 新增多个对象
+# obj=User(name='xxx')
+# obj2=User(name='yyyy')
+# obj3=User(name='zzz')
+#新增同样对象
+# session.add_all([obj,obj2,obj3])
+#新增不同对象
+# session.add_all([Person(name='lqz'),Hobby()])
+####2 简单删除（查到删除）
+# res=session.query(User).filter_by(name='2008').delete()
+# res=session.query(User).filter(User.id>=2).delete()
+# # 影响1行
+# print(res)
+
+#### 3 修改
+# res=session.query(User).filter_by(id=1).update(&#123;User.name:'ccc'&#125;)
+# res=session.query(User).filter_by(id=1).update(&#123;'name':'ccc'&#125;)
+
+# session.query(User).filter(User.id > 0).update(&#123;User.name: User.name + "099"&#125;, synchronize_session=False) # 如果要把它转成字符串相加
+# session.query(User).filter(User.id > 0).update(&#123;"age": User.age + 1&#125;, synchronize_session="evaluate")  ## 如果要把它转成数字相加
+
+
+####4 基本查询操作
+
+# res=session.query(User).all()
+# print(type(res))
+# res=session.query(User).first()
+# print(res)
+
+#filter传的是表达式，filter_by传的是参数
+# res=session.query(User).filter(User.id==1).all()
+# res=session.query(User).filter(User.id>=1).all()
+# res=session.query(User).filter(User.id<1).all()
+
+# res=session.query(User).filter_by(name='ccc099').all()
+
+
+#了解
+# res = session.query(User).from_statement(text("SELECT * FROM users where name=:name")).params(name='ccc099').all()
+# print(res)
+
+
+session.commit()
+# 并没有真正关闭连接，而是放回池中
+session.close()
+</code></pre>
+<h3 id="6-高级操作"><a href="#6-高级操作" class="headerlink" title="6 高级操作"></a>6 高级操作</h3><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>orm <span class="token keyword">import</span> sessionmaker
+<span class="token keyword">from</span> sqlalchemy <span class="token keyword">import</span> create_engine
+<span class="token keyword">from</span> models <span class="token keyword">import</span> User<span class="token punctuation">,</span>Person<span class="token punctuation">,</span>Hobby
+<span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>sql <span class="token keyword">import</span> text
+engine <span class="token operator">=</span> create_engine<span class="token punctuation">(</span><span class="token string">"mysql+pymysql://root:123@127.0.0.1:3306/aaa"</span><span class="token punctuation">,</span> max_overflow<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">,</span> pool_size<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span>
+Session <span class="token operator">=</span> sessionmaker<span class="token punctuation">(</span>bind<span class="token operator">=</span>engine<span class="token punctuation">)</span>
+session<span class="token operator">=</span>Session<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+
+<span class="token comment" spellcheck="true"># 1 查询名字为lqz的所有user对象</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).filter_by(name='ccc099').all()</span>
+<span class="token comment" spellcheck="true"># 2 表达式，and条件连接</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).filter(User.id > 1, User.name == 'egon').all()</span>
+<span class="token comment" spellcheck="true"># 查找id在1和10之间，并且name=egon的对象</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).filter(User.id.between(1, 10), User.name == 'egon').all()</span>
+
+<span class="token comment" spellcheck="true"># in条件(class_,因为这是关键字，不能直接用)</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).filter(User.id.in_([1,3,4])).all()</span>
+
+<span class="token comment" spellcheck="true"># 取反 ~</span>
+ret <span class="token operator">=</span> session<span class="token punctuation">.</span>query<span class="token punctuation">(</span>User<span class="token punctuation">)</span><span class="token punctuation">.</span>filter<span class="token punctuation">(</span><span class="token operator">~</span>User<span class="token punctuation">.</span>id<span class="token punctuation">.</span>in_<span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">3</span><span class="token punctuation">,</span><span class="token number">4</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>all<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true">#二次筛选</span>
+<span class="token comment" spellcheck="true"># select *</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).filter(User.id.in_(session.query(User.id).filter_by(name='egon'))).all()</span>
+<span class="token comment" spellcheck="true"># # select name，id 。。。。</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User.id,User.name).filter(User.id.in_(session.query(User.id).filter_by(name='egon'))).all()</span>
+
+<span class="token triple-quoted-string string">'''
+SELECT users.id AS users_id, users.name AS users_name 
+FROM users 
+WHERE users.id IN (SELECT users.id AS users_id 
+FROM users 
+WHERE users.name = %(name_1)s)
+
+'''</span>
+
+
+<span class="token comment" spellcheck="true">#</span>
+<span class="token keyword">from</span> sqlalchemy <span class="token keyword">import</span> and_<span class="token punctuation">,</span> or_
+<span class="token comment" spellcheck="true">#or_包裹的都是or条件，and_包裹的都是and条件</span>
+<span class="token comment" spellcheck="true">#查询id>3并且name=egon的人</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).filter(and_(User.id > 3, User.name == 'egon')).all()</span>
+
+<span class="token comment" spellcheck="true"># 查询id大于2或者name=ccc099的数据</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).filter(or_(User.id > 2, User.name == 'ccc099')).all()</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).filter(</span>
+<span class="token comment" spellcheck="true">#     or_(</span>
+<span class="token comment" spellcheck="true">#         User.id &lt; 2,</span>
+<span class="token comment" spellcheck="true">#         and_(User.name == 'egon', User.id > 3),</span>
+<span class="token comment" spellcheck="true">#         User.extra != ""</span>
+<span class="token comment" spellcheck="true">#     )).all()</span>
+<span class="token comment" spellcheck="true"># print(ret)</span>
+
+<span class="token triple-quoted-string string">'''
+select *from user where id&lt;2 or (name=egon and id >3) or extra !=''
+'''</span>
+
+
+<span class="token comment" spellcheck="true"># 通配符，以e开头，不以e开头</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).filter(User.name.like('e%')).all()</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).filter(~User.name.like('e%')).all()</span>
+
+<span class="token comment" spellcheck="true"># 限制，用于分页，区间 limit</span>
+<span class="token comment" spellcheck="true"># 前闭后开区间，1能取到，3取不到</span>
+ret <span class="token operator">=</span> session<span class="token punctuation">.</span>query<span class="token punctuation">(</span>User<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">:</span><span class="token number">3</span><span class="token punctuation">]</span>
+
+<span class="token triple-quoted-string string">'''
+select * from users limit 1,2;
+'''</span>
+
+
+<span class="token comment" spellcheck="true"># 排序，根据name降序排列（从大到小）</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).order_by(User.name.desc()).all()</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).order_by(User.name.asc()).all()</span>
+<span class="token comment" spellcheck="true">#第一个条件降序排序后，再按第二个条件升序排</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).order_by(User.id.asc(),User.name.desc()).all()</span>
+<span class="token comment" spellcheck="true"># ret = session.query(User).order_by(User.name.desc(),User.id.asc()).all()</span>
+
+
+<span class="token comment" spellcheck="true"># 分组</span>
+<span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>sql <span class="token keyword">import</span> func
+
+<span class="token comment" spellcheck="true"># ret = session.query(User).group_by(User.name).all()</span>
+<span class="token comment" spellcheck="true">#分组之后取最大id，id之和，最小id</span>
+<span class="token comment" spellcheck="true"># sql 分组之后，要查询的字段只能有分组字段和聚合函数</span>
+<span class="token comment" spellcheck="true"># ret = session.query(</span>
+<span class="token comment" spellcheck="true">#     func.max(User.id),</span>
+<span class="token comment" spellcheck="true">#     func.sum(User.id),</span>
+<span class="token comment" spellcheck="true">#     func.min(User.id),</span>
+<span class="token comment" spellcheck="true">#     User.name).group_by(User.name).all()</span>
+<span class="token comment" spellcheck="true"># </span><span class="token triple-quoted-string string">'''
+# select max(id),sum(id),min(id) from user group by name;
+#
+# '''</span>
+<span class="token comment" spellcheck="true"># for obj in ret:</span>
+<span class="token comment" spellcheck="true">#     print(obj[0],'----',obj[1],'-----',obj[2],'-----',obj[3])</span>
+<span class="token comment" spellcheck="true"># print(ret)</span>
+
+<span class="token comment" spellcheck="true">#haviing筛选</span>
+<span class="token comment" spellcheck="true"># ret = session.query(</span>
+<span class="token comment" spellcheck="true">#     func.max(User.id),</span>
+<span class="token comment" spellcheck="true">#     func.sum(User.id),</span>
+<span class="token comment" spellcheck="true">#     func.min(User.id)).group_by(User.name).having(func.min(User.id) >2).all()</span>
+
+<span class="token triple-quoted-string string">'''
+select max(id),sum(id),min(id) from user group by name having min(id)>2;
+
+'''</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>ret<span class="token punctuation">)</span>
+session<span class="token punctuation">.</span>commit<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+session<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h3 id="7-多表操作"><a href="#7-多表操作" class="headerlink" title="7 多表操作"></a>7 多表操作</h3><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>orm <span class="token keyword">import</span> sessionmaker
+<span class="token keyword">from</span> sqlalchemy <span class="token keyword">import</span> create_engine
+<span class="token keyword">from</span> models <span class="token keyword">import</span> User<span class="token punctuation">,</span>Person<span class="token punctuation">,</span>Hobby<span class="token punctuation">,</span>Boy<span class="token punctuation">,</span>Girl<span class="token punctuation">,</span>Boy2Girl
+<span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>sql <span class="token keyword">import</span> text
+engine <span class="token operator">=</span> create_engine<span class="token punctuation">(</span><span class="token string">"mysql+pymysql://root:123@127.0.0.1:3306/aaa"</span><span class="token punctuation">,</span> max_overflow<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">,</span> pool_size<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">)</span>
+Session <span class="token operator">=</span> sessionmaker<span class="token punctuation">(</span>bind<span class="token operator">=</span>engine<span class="token punctuation">)</span>
+session<span class="token operator">=</span>Session<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+
+
+<span class="token comment" spellcheck="true">###  1 一对多插入数据</span>
+<span class="token comment" spellcheck="true"># obj=Hobby(caption='足球')</span>
+<span class="token comment" spellcheck="true"># session.add(obj)</span>
+<span class="token comment" spellcheck="true"># p=Person(name='张三',hobby_id=2)</span>
+<span class="token comment" spellcheck="true"># session.add(p)</span>
+<span class="token comment" spellcheck="true">### 2 方式二(默认情况传对象有问题)</span>
+<span class="token comment" spellcheck="true">###### Person表中要加 hobby = relationship('Hobby', backref='pers')</span>
+<span class="token comment" spellcheck="true"># p=Person(name='李四',hobby=Hobby(caption='美女'))</span>
+<span class="token comment" spellcheck="true"># 等同于</span>
+<span class="token comment" spellcheck="true"># p=Person(name='李四2')</span>
+<span class="token comment" spellcheck="true"># p.hobby=Hobby(caption='美女2')</span>
+<span class="token comment" spellcheck="true"># session.add(p)</span>
+
+<span class="token comment" spellcheck="true">## 3 方式三，通过反向操作</span>
+<span class="token comment" spellcheck="true"># hb = Hobby(caption='人妖')</span>
+<span class="token comment" spellcheck="true"># hb.pers = [Person(name='文飞'), Person(name='博雅')]</span>
+<span class="token comment" spellcheck="true"># session.add(hb)</span>
+
+
+<span class="token comment" spellcheck="true">#### 4 查询（查询：基于连表的查询，基于对象的跨表查询）</span>
+<span class="token comment" spellcheck="true">### 4.1 基于对象的跨表查询(子查询，两次查询)</span>
+<span class="token comment" spellcheck="true"># 正查</span>
+<span class="token comment" spellcheck="true"># p=session.query(Person).filter_by(name='张三').first()</span>
+<span class="token comment" spellcheck="true"># print(p)</span>
+<span class="token comment" spellcheck="true"># print(p.hobby.caption)</span>
+<span class="token comment" spellcheck="true"># 反查</span>
+<span class="token comment" spellcheck="true"># h=session.query(Hobby).filter_by(caption='人妖').first()</span>
+<span class="token comment" spellcheck="true"># print(h.pers)</span>
+
+<span class="token comment" spellcheck="true">### 4.2 基于连表的跨表查（查一次）</span>
+<span class="token comment" spellcheck="true"># 默认根据外键连表</span>
+<span class="token comment" spellcheck="true"># isouter=True 左外连，表示Person left join Hobby，没有右连接，反过来即可</span>
+<span class="token comment" spellcheck="true"># 不写 inner join</span>
+<span class="token comment" spellcheck="true"># person_list=session.query(Person,Hobby).join(Hobby,isouter=True).all()</span>
+<span class="token comment" spellcheck="true"># print(person_list)</span>
+<span class="token comment" spellcheck="true"># print(person_list)</span>
+<span class="token comment" spellcheck="true"># for row in person_list:</span>
+<span class="token comment" spellcheck="true">#     print(row[0].name,row[1].caption)</span>
+
+<span class="token comment" spellcheck="true"># </span><span class="token triple-quoted-string string">'''
+# select * from person left join hobby on person.hobby_id=hobby.id
+# '''</span>
+<span class="token comment" spellcheck="true">#</span>
+<span class="token comment" spellcheck="true"># ret = session.query(Person, Hobby).filter(Person.hobby_id == Hobby.id)</span>
+<span class="token comment" spellcheck="true"># print(ret)</span>
+<span class="token comment" spellcheck="true"># </span><span class="token triple-quoted-string string">'''
+# select * from user,hobby where user.id=favor.nid;
+#
+# '''</span>
+
+
+<span class="token comment" spellcheck="true">#join表，默认是inner join</span>
+<span class="token comment" spellcheck="true"># ret = session.query(Person).join(Hobby)</span>
+<span class="token comment" spellcheck="true"># # ret = session.query(Hobby).join(Person,isouter=True)</span>
+<span class="token comment" spellcheck="true"># </span><span class="token triple-quoted-string string">'''
+# SELECT *
+# FROM person INNER JOIN hobby ON hobby.id = person.hobby_id
+# '''</span>
+<span class="token comment" spellcheck="true"># print(ret)</span>
+
+
+<span class="token comment" spellcheck="true"># 指定连表字段（从来没用过）</span>
+<span class="token comment" spellcheck="true"># ret = session.query(Person).join(Hobby,Person.nid==Hobby.id, isouter=True)</span>
+<span class="token comment" spellcheck="true"># # ret = session.query(Person).join(Hobby,Person.hobby_id==Hobby.id, isouter=True).all()</span>
+<span class="token comment" spellcheck="true"># print(ret)</span>
+<span class="token triple-quoted-string string">'''
+SELECT *
+FROM person LEFT OUTER JOIN hobby ON person.nid = hobby.id
+
+'''</span>
+
+<span class="token comment" spellcheck="true"># print(ret)</span>
+
+
+
+
+<span class="token comment" spellcheck="true"># 组合（了解）UNION 操作符用于合并两个或多个 SELECT 语句的结果集</span>
+<span class="token comment" spellcheck="true"># union和union all的区别？</span>
+<span class="token comment" spellcheck="true"># q1 = session.query(User.name).filter(User.id > 2)  # 6条数据</span>
+<span class="token comment" spellcheck="true"># q2 = session.query(User.name).filter(User.id &lt; 8) # 2条数据</span>
+
+
+<span class="token comment" spellcheck="true"># q1 = session.query(User.id,User.name).filter(User.id > 2)  # 6条数据</span>
+<span class="token comment" spellcheck="true"># q2 = session.query(User.id,User.name).filter(User.id &lt; 8) # 2条数据</span>
+<span class="token comment" spellcheck="true"># ret = q1.union_all(q2).all()</span>
+<span class="token comment" spellcheck="true"># ret1 = q1.union(q2).all()</span>
+<span class="token comment" spellcheck="true"># print(ret)</span>
+<span class="token comment" spellcheck="true"># print(ret1)</span>
+<span class="token comment" spellcheck="true">#</span>
+<span class="token comment" spellcheck="true"># q1 = session.query(User.name).filter(User.id > 2)</span>
+<span class="token comment" spellcheck="true"># q2 = session.query(Hobby.caption).filter(Hobby.nid &lt; 2)</span>
+<span class="token comment" spellcheck="true"># ret = q1.union_all(q2).all()</span>
+
+
+
+
+
+
+
+<span class="token comment" spellcheck="true">#### 多对多</span>
+
+<span class="token comment" spellcheck="true"># session.add_all([</span>
+<span class="token comment" spellcheck="true">#     Boy(hostname='霍建华'),</span>
+<span class="token comment" spellcheck="true">#     Boy(hostname='胡歌'),</span>
+<span class="token comment" spellcheck="true">#     Girl(name='刘亦菲'),</span>
+<span class="token comment" spellcheck="true">#     Girl(name='林心如'),</span>
+<span class="token comment" spellcheck="true"># ])</span>
+<span class="token comment" spellcheck="true"># session.add_all([</span>
+<span class="token comment" spellcheck="true">#     Boy2Girl(girl_id=1, boy_id=1),</span>
+<span class="token comment" spellcheck="true">#     Boy2Girl(girl_id=2, boy_id=1)</span>
+<span class="token comment" spellcheck="true"># ])</span>
+
+
+<span class="token comment" spellcheck="true">##### 要有girls = relationship('Girl', secondary='boy2girl', backref='boys')</span>
+<span class="token comment" spellcheck="true"># girl = Girl(name='张娜拉')</span>
+<span class="token comment" spellcheck="true"># girl.boys = [Boy(hostname='张铁林'),Boy(hostname='费玉清')]</span>
+<span class="token comment" spellcheck="true"># session.add(girl)</span>
+
+<span class="token comment" spellcheck="true"># boy=Boy(hostname='蔡徐坤')</span>
+<span class="token comment" spellcheck="true"># boy.girls=[Girl(name='谢娜'),Girl(name='巧碧螺')]</span>
+<span class="token comment" spellcheck="true"># session.add(boy)</span>
+<span class="token comment" spellcheck="true"># session.commit()</span>
+
+
+<span class="token comment" spellcheck="true"># 基于对象的跨表查</span>
+
+<span class="token comment" spellcheck="true"># girl=session.query(Girl).filter_by(id=3).first()</span>
+<span class="token comment" spellcheck="true"># print(girl.boys)</span>
+
+<span class="token comment" spellcheck="true">#### 基于连表的跨表查询</span>
+
+<span class="token comment" spellcheck="true"># 查询蔡徐坤约过的所有妹子</span>
+<span class="token triple-quoted-string string">'''
+select girl.name from girl,boy,Boy2Girl where boy.id=Boy2Girl.boy_id and girl.id=Boy2Girl.girl_id where boy.name='蔡徐坤'
+
+'''</span>
+<span class="token comment" spellcheck="true"># ret=session.query(Girl.name).filter(Boy.id==Boy2Girl.boy_id,Girl.id==Boy2Girl.girl_id,Boy.hostname=='蔡徐坤').all()</span>
+
+<span class="token triple-quoted-string string">'''
+select girl.name from girl inner join Boy2Girl on girl.id=Boy2Girl.girl_id inner join boy on boy.id=Boy2Girl.boy_id where boy.hostname='蔡徐坤'
+
+'''</span>
+<span class="token comment" spellcheck="true"># ret=session.query(Girl.name).join(Boy2Girl).join(Boy).filter(Boy.hostname=='蔡徐坤').all()</span>
+ret<span class="token operator">=</span>session<span class="token punctuation">.</span>query<span class="token punctuation">(</span>Girl<span class="token punctuation">.</span>name<span class="token punctuation">)</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>Boy2Girl<span class="token punctuation">)</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>Boy<span class="token punctuation">)</span><span class="token punctuation">.</span>filter_by<span class="token punctuation">(</span>hostname<span class="token operator">=</span><span class="token string">'蔡徐坤'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>all<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>ret<span class="token punctuation">)</span>
+
+
+<span class="token comment" spellcheck="true">### 执行原生sql（用的最多的）</span>
+<span class="token comment" spellcheck="true">### django中orm如何执行原生sql</span>
+<span class="token comment" spellcheck="true">#</span>
+<span class="token comment" spellcheck="true"># cursor = session.execute('insert into users(name) values(:value)',params=&amp;#123;"value":'xxx'&amp;#125;)</span>
+<span class="token comment" spellcheck="true"># print(cursor.lastrowid)</span>
+<span class="token comment" spellcheck="true"># session.commit()</span>
+
+session<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h3 id="8-models-py"><a href="#8-models-py" class="headerlink" title="8 models.py"></a>8 models.py</h3><pre class=" language-python"><code class="language-python">
+
+
+<span class="token comment" spellcheck="true"># 创建一个个类（继承谁？字段怎么写）</span>
+<span class="token keyword">import</span> datetime
+<span class="token keyword">from</span> sqlalchemy <span class="token keyword">import</span> create_engine
+<span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>ext<span class="token punctuation">.</span>declarative <span class="token keyword">import</span> declarative_base
+<span class="token comment" spellcheck="true"># 字段和字段属性</span>
+<span class="token keyword">from</span> sqlalchemy <span class="token keyword">import</span> Column<span class="token punctuation">,</span> Integer<span class="token punctuation">,</span> String<span class="token punctuation">,</span> Text<span class="token punctuation">,</span> ForeignKey<span class="token punctuation">,</span> DateTime<span class="token punctuation">,</span> UniqueConstraint<span class="token punctuation">,</span> Index
+<span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>orm <span class="token keyword">import</span> relationship
+<span class="token comment" spellcheck="true"># 制造了一个类，作为所有模型类的基类</span>
+Base <span class="token operator">=</span> declarative_base<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">class</span> <span class="token class-name">User</span><span class="token punctuation">(</span>Base<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    __tablename__ <span class="token operator">=</span> <span class="token string">'users'</span>  <span class="token comment" spellcheck="true"># 数据库表名称(固定写法)，如果不写，默认以类名小写作为表的名字</span>
+    id <span class="token operator">=</span> Column<span class="token punctuation">(</span>Integer<span class="token punctuation">,</span> primary_key<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># id 主键</span>
+    <span class="token comment" spellcheck="true"># mysql中主键自动建索引：聚簇索引</span>
+    <span class="token comment" spellcheck="true"># 其他建建的索引叫：辅助索引</span>
+    name <span class="token operator">=</span> Column<span class="token punctuation">(</span>String<span class="token punctuation">(</span><span class="token number">32</span><span class="token punctuation">)</span><span class="token punctuation">,</span> index<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span> nullable<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># name列，索引，不可为空</span>
+    <span class="token comment" spellcheck="true"># email = Column(String(32), unique=True)  # 唯一</span>
+    <span class="token comment" spellcheck="true"># #datetime.datetime.now不能加括号，加了括号，以后永远是当前时间</span>
+    <span class="token comment" spellcheck="true"># ctime = Column(DateTime, default=datetime.datetime.now) # default默认值</span>
+    <span class="token comment" spellcheck="true"># extra = Column(Text, nullable=True)</span>
+
+    <span class="token comment" spellcheck="true">#类似于djagno的 Meta</span>
+    <span class="token comment" spellcheck="true"># __table_args__ = (</span>
+    <span class="token comment" spellcheck="true">#     UniqueConstraint('id', 'name', name='uix_id_name'), #联合唯一</span>
+    <span class="token comment" spellcheck="true">#     Index('ix_id_name', 'name', 'email'), #索引</span>
+    <span class="token comment" spellcheck="true"># )</span>
+    <span class="token keyword">def</span> <span class="token function">__str__</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> self<span class="token punctuation">.</span>name
+    <span class="token keyword">def</span> <span class="token function">__repr__</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token comment" spellcheck="true"># python是强类型语言</span>
+        <span class="token keyword">return</span> self<span class="token punctuation">.</span>name<span class="token operator">+</span>str<span class="token punctuation">(</span>self<span class="token punctuation">.</span>id<span class="token punctuation">)</span>
+
+
+
+
+<span class="token comment" spellcheck="true"># 一对多关系</span>
+
+<span class="token comment" spellcheck="true"># 一个Hobby可以有很多人喜欢</span>
+<span class="token comment" spellcheck="true"># 一个人只能由一个Hobby</span>
+<span class="token keyword">class</span> <span class="token class-name">Hobby</span><span class="token punctuation">(</span>Base<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    __tablename__ <span class="token operator">=</span> <span class="token string">'hobby'</span>
+    id <span class="token operator">=</span> Column<span class="token punctuation">(</span>Integer<span class="token punctuation">,</span> primary_key<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+    caption <span class="token operator">=</span> Column<span class="token punctuation">(</span>String<span class="token punctuation">(</span><span class="token number">50</span><span class="token punctuation">)</span><span class="token punctuation">,</span> default<span class="token operator">=</span><span class="token string">'篮球'</span><span class="token punctuation">)</span>
+
+
+<span class="token keyword">class</span> <span class="token class-name">Person</span><span class="token punctuation">(</span>Base<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    __tablename__ <span class="token operator">=</span> <span class="token string">'person'</span>
+    nid <span class="token operator">=</span> Column<span class="token punctuation">(</span>Integer<span class="token punctuation">,</span> primary_key<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+    name <span class="token operator">=</span> Column<span class="token punctuation">(</span>String<span class="token punctuation">(</span><span class="token number">32</span><span class="token punctuation">)</span><span class="token punctuation">,</span> index<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span> nullable<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+    <span class="token comment" spellcheck="true"># hobby指的是tablename而不是类名，uselist=False</span>
+    <span class="token comment" spellcheck="true"># 一对多的关系，关联字段写在多的一方</span>
+    hobby_id <span class="token operator">=</span> Column<span class="token punctuation">(</span>Integer<span class="token punctuation">,</span> ForeignKey<span class="token punctuation">(</span><span class="token string">"hobby.id"</span><span class="token punctuation">)</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 默认可以为空</span>
+
+    <span class="token comment" spellcheck="true"># 跟数据库无关，不会新增字段，只用于快速链表操作</span>
+    <span class="token comment" spellcheck="true"># 类名，backref用于反向查询</span>
+    hobby <span class="token operator">=</span> relationship<span class="token punctuation">(</span><span class="token string">'Hobby'</span><span class="token punctuation">,</span> backref<span class="token operator">=</span><span class="token string">'pers'</span><span class="token punctuation">)</span>
+
+
+<span class="token comment" spellcheck="true"># 多对多关系</span>
+<span class="token comment" spellcheck="true"># 实实在在存在的表</span>
+<span class="token keyword">class</span> <span class="token class-name">Boy2Girl</span><span class="token punctuation">(</span>Base<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    __tablename__ <span class="token operator">=</span> <span class="token string">'boy2girl'</span>
+    id <span class="token operator">=</span> Column<span class="token punctuation">(</span>Integer<span class="token punctuation">,</span> primary_key<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span> autoincrement<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span> <span class="token comment" spellcheck="true"># autoincrement自增，默认是True</span>
+    girl_id <span class="token operator">=</span> Column<span class="token punctuation">(</span>Integer<span class="token punctuation">,</span> ForeignKey<span class="token punctuation">(</span><span class="token string">'girl.id'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    boy_id <span class="token operator">=</span> Column<span class="token punctuation">(</span>Integer<span class="token punctuation">,</span> ForeignKey<span class="token punctuation">(</span><span class="token string">'boy.id'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+
+
+<span class="token keyword">class</span> <span class="token class-name">Girl</span><span class="token punctuation">(</span>Base<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    __tablename__ <span class="token operator">=</span> <span class="token string">'girl'</span>
+    id <span class="token operator">=</span> Column<span class="token punctuation">(</span>Integer<span class="token punctuation">,</span> primary_key<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+    name <span class="token operator">=</span> Column<span class="token punctuation">(</span>String<span class="token punctuation">(</span><span class="token number">64</span><span class="token punctuation">)</span><span class="token punctuation">,</span> unique<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span> nullable<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+
+
+<span class="token keyword">class</span> <span class="token class-name">Boy</span><span class="token punctuation">(</span>Base<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    __tablename__ <span class="token operator">=</span> <span class="token string">'boy'</span>
+
+    id <span class="token operator">=</span> Column<span class="token punctuation">(</span>Integer<span class="token punctuation">,</span> primary_key<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span> autoincrement<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+    hostname <span class="token operator">=</span> Column<span class="token punctuation">(</span>String<span class="token punctuation">(</span><span class="token number">64</span><span class="token punctuation">)</span><span class="token punctuation">,</span> unique<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span> nullable<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+
+    <span class="token comment" spellcheck="true"># 与生成表结构无关，仅用于查询方便,放在哪个单表中都可以</span>
+    <span class="token comment" spellcheck="true"># secondary 通过哪个表建关联，跟django中的through一模一样</span>
+    girls <span class="token operator">=</span> relationship<span class="token punctuation">(</span><span class="token string">'Girl'</span><span class="token punctuation">,</span> secondary<span class="token operator">=</span><span class="token string">'boy2girl'</span><span class="token punctuation">,</span> backref<span class="token operator">=</span><span class="token string">'boys'</span><span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 创建表</span>
+<span class="token keyword">def</span> <span class="token function">create_table</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># 创建engine对象</span>
+    engine <span class="token operator">=</span> create_engine<span class="token punctuation">(</span>
+        <span class="token string">"mysql+pymysql://root:123@127.0.0.1:3306/aaa?charset=utf8"</span><span class="token punctuation">,</span>
+        max_overflow<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 超过连接池大小外最多创建的连接</span>
+        pool_size<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 连接池大小</span>
+        pool_timeout<span class="token operator">=</span><span class="token number">30</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 池中没有线程最多等待的时间，否则报错</span>
+        pool_recycle<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>  <span class="token comment" spellcheck="true"># 多久之后对线程池中的线程进行一次连接的回收（重置）</span>
+    <span class="token punctuation">)</span>
+    <span class="token comment" spellcheck="true"># 通过engine对象创建表</span>
+    Base<span class="token punctuation">.</span>metadata<span class="token punctuation">.</span>create_all<span class="token punctuation">(</span>engine<span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 删除表</span>
+<span class="token keyword">def</span> <span class="token function">drop_table</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># 创建engine对象</span>
+    engine <span class="token operator">=</span> create_engine<span class="token punctuation">(</span>
+        <span class="token string">"mysql+pymysql://root:123@127.0.0.1:3306/aaa?charset=utf8"</span><span class="token punctuation">,</span>
+        max_overflow<span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 超过连接池大小外最多创建的连接</span>
+        pool_size<span class="token operator">=</span><span class="token number">5</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 连接池大小</span>
+        pool_timeout<span class="token operator">=</span><span class="token number">30</span><span class="token punctuation">,</span>  <span class="token comment" spellcheck="true"># 池中没有线程最多等待的时间，否则报错</span>
+        pool_recycle<span class="token operator">=</span><span class="token operator">-</span><span class="token number">1</span>  <span class="token comment" spellcheck="true"># 多久之后对线程池中的线程进行一次连接的回收（重置）</span>
+    <span class="token punctuation">)</span>
+    <span class="token comment" spellcheck="true"># 通过engine对象删除所有表</span>
+    Base<span class="token punctuation">.</span>metadata<span class="token punctuation">.</span>drop_all<span class="token punctuation">(</span>engine<span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">'__main__'</span><span class="token punctuation">:</span>
+    create_table<span class="token punctuation">(</span><span class="token punctuation">)</span>  <span class="token comment" spellcheck="true"># 原来已经存在user表，再执行一次不会有问题</span>
+    <span class="token comment" spellcheck="true"># drop_table()</span>
+
+<span class="token comment" spellcheck="true"># 创建库？手动创建库</span>
+<span class="token comment" spellcheck="true"># 问题，sqlachemy支持修改字段吗？不支持</span></code></pre>
+<h3 id="9-flask-sqlachemy"><a href="#9-flask-sqlachemy" class="headerlink" title="9 flask-sqlachemy"></a>9 flask-sqlachemy</h3><pre class=" language-python"><code class="language-python"><span class="token number">1</span> Flask<span class="token operator">-</span>SQLAlchemy
+<span class="token number">2</span> flask<span class="token operator">-</span>migrate
+    <span class="token operator">-</span>python3 manage<span class="token punctuation">.</span>py db init 初始化：只执行一次
+    <span class="token operator">-</span>python3 manage<span class="token punctuation">.</span>py db migrate 等同于 makemigartions
+    <span class="token operator">-</span>python3 manage<span class="token punctuation">.</span>py db upgrade 等同于migrate
+
+<span class="token number">3</span> 看代码
+<span class="token number">4</span> Flask<span class="token operator">-</span>SQLAlchemy如何使用
+    <span class="token number">1</span> <span class="token keyword">from</span> flask_sqlalchemy <span class="token keyword">import</span> SQLAlchemy
+    <span class="token number">2</span> db <span class="token operator">=</span> SQLAlchemy<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token number">3</span> db<span class="token punctuation">.</span>init_app<span class="token punctuation">(</span>app<span class="token punctuation">)</span>
+    <span class="token number">4</span> 以后在视图函数中使用
+        <span class="token operator">-</span>db<span class="token punctuation">.</span>session 就是咱们讲的session
+
+<span class="token number">5</span> flask<span class="token operator">-</span>migrate的使用（表创建，字段修改）
+    <span class="token number">1</span> <span class="token keyword">from</span> flask_migrate <span class="token keyword">import</span> Migrate<span class="token punctuation">,</span>MigrateCommand
+    <span class="token number">2</span> Migrate<span class="token punctuation">(</span>app<span class="token punctuation">,</span>db<span class="token punctuation">)</span>
+    <span class="token number">3</span> manager<span class="token punctuation">.</span>add_command<span class="token punctuation">(</span><span class="token string">'db'</span><span class="token punctuation">,</span> MigrateCommand<span class="token punctuation">)</span>
+<span class="token number">6</span> 直接使用
+    <span class="token operator">-</span>python3 manage<span class="token punctuation">.</span>py db init 初始化：只执行一次，创建migrations文件夹
+    <span class="token operator">-</span>python3 manage<span class="token punctuation">.</span>py db migrate 等同于 makemigartions
+    <span class="token operator">-</span>python3 manage<span class="token punctuation">.</span>py db upgrade 等同于migrate
+</code></pre>
+</div><div id="reward-container"><span class="hty-icon-button button-glow" id="reward-button" title="打赏" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === &quot;none&quot;) ? &quot;block&quot; : &quot;none&quot;;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-hand-coin-line"></use></svg></span><div id="reward-comment">点我就给你看点有意思的</div><div id="qr" style="display:none;"><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://gitee.com/huang_zhao/hz/raw/master/hz/alipay.png"><img loading="lazy" src="https://gitee.com/huang_zhao/hz/raw/master/hz/alipay.png" alt="支付宝" title="支付宝"></a><div><span style="color:#00A3EE"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-alipay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://gitee.com/huang_zhao/hz/raw/master/hz/qqpay.jpg"><img loading="lazy" src="https://gitee.com/huang_zhao/hz/raw/master/hz/qqpay.jpg" alt="QQ 支付" title="QQ 支付"></a><div><span style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://gitee.com/huang_zhao/hz/raw/master/hz/wxpay.jpg"><img loading="lazy" src="https://gitee.com/huang_zhao/hz/raw/master/hz/wxpay.jpg" alt="微信支付" title="微信支付"></a><div><span style="color:#2DC100"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-wechat-pay-line"></use></svg></span></div></div></div></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>爱肖彤真是太好了</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="http://huang_zhao.gitee.io/task/2018/05/22/Flask%20%E5%88%B6%E5%AE%9A%E5%91%BD%E4%BB%A4%EF%BC%8Csqlachemy/" title="Flask 制定命令，sqlachemy">http://huang_zhao.gitee.io/task/2018/05/22/Flask%20%E5%88%B6%E5%AE%9A%E5%91%BD%E4%BB%A4%EF%BC%8Csqlachemy/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/task/2018/06/11/Flask%20%E4%B8%AD%E9%97%B4%E4%BB%B6%E3%80%81%E8%93%9D%E5%9B%BE%EF%BC%8C%E8%AF%B7%E6%B1%82%E4%B8%8A%E4%B8%8B%E6%96%87%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" rel="prev" title="Flask 中间件、蓝图，请求上下文执行流程"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">Flask 中间件、蓝图，请求上下文执行流程</span></a></div><div class="post-nav-item"></div></div></div><div id="comment"><div class="comment-tooltip text-center"></div></div></main><footer class="sidebar-translate" id="footer"><div class="copyright"><span>&copy; 2019 – 2020 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> 爱肖彤真是太好了</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.1.1</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v0.9.7</span></div><div class="live_time"><span>本博客已萌萌哒地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  window.setTimeout(blog_live_time, 1000);
+  const start = new Date('2019-04-12T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="goUp" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><a class="popup-trigger hty-icon-button icon-search" id="search" href="javascript:;" title="搜索"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-search-line"></use></svg></span></a><script>window.addEventListener("DOMContentLoaded", () => {
+  // Handle and trigger popup window
+  document.querySelector(".popup-trigger").addEventListener("click", () => {
+    document.querySelector(".popup").classList.add("show");
+    setTimeout(() => {
+      document.querySelector(".search-input").focus();
+    }, 100);
+  });
+
+  // Monitor main search box
+  const onPopupClose = () => {
+    document.querySelector(".popup").classList.remove("show");
+  };
+
+  document.querySelector(".popup-btn-close").addEventListener("click", () => {
+    onPopupClose();
+  });
+
+  window.addEventListener("keyup", event => {
+    if (event.key === "Escape") {
+      onPopupClose();
+    }
+  });
+});
+</script><script src="/task/js/search/local-search.js" defer></script><div class="popup search-popup"><div class="search-header"><span class="popup-btn-close close-icon hty-icon-button"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-close-line"></use></svg></span></div><div class="search-input-container"><input class="search-input" id="local-search-input" type="text" placeholder="搜索..." value=""></div><div id="local-search-result"></div></div></div><script defer src="/task/js/utils.js"></script><script defer src="/task/js/hexo-theme-yun.js"></script></body></html>
