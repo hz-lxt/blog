@@ -1,0 +1,311 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="爱肖彤真是太好了"><meta name="copyright" content="爱肖彤真是太好了"><meta name="generator" content="Hexo 5.1.1"><meta name="theme" content="hexo-theme-yun"><title>Flask 中间件、蓝图，请求上下文执行流程 | 工藤旧二の博客</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="none" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.19/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_stqaphw3j4.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link rel="shortcut icon" type="image/svg+xml" href="/task/yun.ico"><link rel="mask-icon" href="/task/yun.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/task/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/task/js/utils.js" as="script"><link rel="preload" href="/task/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/task/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" href="/task/css/hexo-theme-yun.css"><link rel="alternate" href="/task/atom.xml" title="工藤旧二の博客" type="application/atom+xml"><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"root":"/task/","title":"工藤旧二の博客","version":"0.9.7","anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"local_search":{"path":"/task/search.xml"},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><script>(function(){
+  var bp = document.createElement('script');
+  var curProtocol = window.location.protocol.split(':')[0];
+  if (curProtocol === 'https') {
+    bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+  }
+  else {
+    bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+  }
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(bp, s);
+})();</script><meta name="description" content="一、flask中间件from flask import Flask,make_response,session,request,flash,get_flashed_messages,redirect  app &#x3D; Flask(__name__)   class Md(object):     def __init__(self,old_wsgi_app):         self.old_wsg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flask 中间件、蓝图，请求上下文执行流程">
+<meta property="og:url" content="http://huang_zhao.gitee.io/task/2018/06/11/python/%E6%A1%86%E6%9E%B6/Flask%20%E4%B8%AD%E9%97%B4%E4%BB%B6%E3%80%81%E8%93%9D%E5%9B%BE%EF%BC%8C%E8%AF%B7%E6%B1%82%E4%B8%8A%E4%B8%8B%E6%96%87%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/index.html">
+<meta property="og:site_name" content="工藤旧二の博客">
+<meta property="og:description" content="一、flask中间件from flask import Flask,make_response,session,request,flash,get_flashed_messages,redirect  app &#x3D; Flask(__name__)   class Md(object):     def __init__(self,old_wsgi_app):         self.old_wsg">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-06-11T12:18:51.000Z">
+<meta property="article:modified_time" content="2020-09-04T11:21:34.000Z">
+<meta property="article:author" content="爱肖彤真是太好了">
+<meta property="article:tag" content="python">
+<meta property="article:tag" content="flask">
+<meta property="article:tag" content="python框架">
+<meta name="twitter:card" content="summary"><script src="/task/js/ui/mode.js"></script><link rel="stylesheet" href="/task/css/prism.css" type="text/css"></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script defer src="/task/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/task/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/task/about/" title="爱肖彤真是太好了"><img width="96" loading="lazy" src="/task/Yun.png" alt="爱肖彤真是太好了"></a><div class="site-author-name"><a href="/task/about/">爱肖彤真是太好了</a></div><a class="site-name" href="/task/about/site.html">工藤旧二の博客</a><sub class="site-subtitle"></sub><div class="site-desciption"></div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/task/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/task/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">47</span></a></div><div class="site-state-item"><a href="/task/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">2</span></a></div><div class="site-state-item"><a href="/task/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">45</span></a></div><a class="site-state-item hty-icon-button" target="_blank" rel="noopener" href="https://yun.yunyoujun.cn" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-settings-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" title="RSS" target="_blank" style="color:orange"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-rss-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="QQ" target="_blank" style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="GitHub" target="_blank" style="color:#6e5494"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-github-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="微博" target="_blank" style="color:#E6162D"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-weibo-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="豆瓣" target="_blank" style="color:#007722"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-douban-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://music.163.com/#/user/home?id=552858287" title="网易云音乐" target="_blank" style="color:#C20C0C"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-netease-cloud-music-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="知乎" target="_blank" style="color:#0084FF"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-zhihu-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://space.bilibili.com/15081363" title="哔哩哔哩" target="_blank" style="color:#FF8EB3"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bilibili-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="Twitter" target="_blank" style="color:#1da1f2"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-twitter-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="Telegram Channel" target="_blank" style="color:#0088CC"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-telegram-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="E-Mail" target="_blank" style="color:#8E71C1"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-mail-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="Travelling" target="_blank" style="color:var(--hty-text-color)"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-send-plane-2-line"></use></svg></a></div><hr style="margin:0.5rem 1rem"><div class="links"><a class="links-item hty-icon-button" href="/task/links/" title="我的小伙伴们" style="color:dodgerblue"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-genderless-line"></use></svg></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81flask%E4%B8%AD%E9%97%B4%E4%BB%B6"><span class="toc-text">一、flask中间件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E7%8C%B4%E5%AD%90%E8%A1%A5%E4%B8%81%EF%BC%88%E6%89%A9%E5%B1%95%EF%BC%89"><span class="toc-text">二、猴子补丁（扩展）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%93%9D%E5%9B%BE%EF%BC%88blueprint%EF%BC%89"><span class="toc-text">三、蓝图（blueprint）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81partal%E5%81%8F%E5%87%BD%E6%95%B0%EF%BC%88%E6%89%A9%E5%B1%95%EF%BC%89"><span class="toc-text">四、partal偏函数（扩展）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81threading-local"><span class="toc-text">五、threading.local</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E8%AF%B7%E6%B1%82%E4%B8%8A%E4%B8%8B%E6%96%87%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="toc-text">六、请求上下文执行流程</span></a></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="http://huang_zhao.gitee.io/task/task/2018/06/11/python/%E6%A1%86%E6%9E%B6/Flask%20%E4%B8%AD%E9%97%B4%E4%BB%B6%E3%80%81%E8%93%9D%E5%9B%BE%EF%BC%8C%E8%AF%B7%E6%B1%82%E4%B8%8A%E4%B8%8B%E6%96%87%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="爱肖彤真是太好了"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="工藤旧二の博客"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Flask 中间件、蓝图，请求上下文执行流程</h1><div class="post-meta"><div class="post-time" style="display:block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2018-06-11 20:18:51" itemprop="dateCreated datePublished" datetime="2018-06-11T20:18:51+08:00">2018-06-11</time><span class="post-meta-divider">-</span><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-2-line"></use></svg></span> <time title="修改时间：2020-09-04 19:21:34" itemprop="dateModified" datetime="2020-09-04T19:21:34+08:00">2020-09-04</time></div><span class="post-count"><span class="post-symbolcount"><span class="post-meta-item-icon" title="本文字数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-file-word-line"></use></svg></span> <span title="本文字数">2.4k</span><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读时长"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-timer-line"></use></svg></span> <span title="阅读时长">9m</span></span></span><div class="post-classify"><span class="post-category"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span> <span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/task/categories/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">技术分享</span></a></span></span><span class="post-tag"><span class="post-meta-divider">-</span><a class="tag" href="/task/tags/python/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">python</span></a><a class="tag" href="/task/tags/flask/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">flask</span></a><a class="tag" href="/task/tags/python%E6%A1%86%E6%9E%B6/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">python框架</span></a></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><h2 id="一、flask中间件"><a href="#一、flask中间件" class="headerlink" title="一、flask中间件"></a>一、flask中间件</h2><pre class=" language-python"><code class="language-python"><span class="token keyword">from</span> flask <span class="token keyword">import</span> Flask<span class="token punctuation">,</span>make_response<span class="token punctuation">,</span>session<span class="token punctuation">,</span>request<span class="token punctuation">,</span>flash<span class="token punctuation">,</span>get_flashed_messages<span class="token punctuation">,</span>redirect
+
+app <span class="token operator">=</span> Flask<span class="token punctuation">(</span>__name__<span class="token punctuation">)</span>
+
+
+<span class="token keyword">class</span> <span class="token class-name">Md</span><span class="token punctuation">(</span>object<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span>old_wsgi_app<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        self<span class="token punctuation">.</span>old_wsgi_app <span class="token operator">=</span> old_wsgi_app
+
+    <span class="token keyword">def</span> <span class="token function">__call__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span>  environ<span class="token punctuation">,</span> start_response<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'开始之前'</span><span class="token punctuation">)</span>
+        ret <span class="token operator">=</span> self<span class="token punctuation">.</span>old_wsgi_app<span class="token punctuation">(</span>environ<span class="token punctuation">,</span> start_response<span class="token punctuation">)</span>
+        <span class="token keyword">import</span> time
+        time<span class="token punctuation">.</span>sleep<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'结束之后'</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> ret
+
+@app<span class="token punctuation">.</span>route<span class="token punctuation">(</span><span class="token string">'/'</span><span class="token punctuation">,</span>methods<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'GET'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">index</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'index'</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> <span class="token string">'index'</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">'__main__'</span><span class="token punctuation">:</span>
+    app<span class="token punctuation">.</span>wsgi_app <span class="token operator">=</span> Md<span class="token punctuation">(</span>app<span class="token punctuation">.</span>wsgi_app<span class="token punctuation">)</span>
+    app<span class="token punctuation">.</span>run<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token comment" spellcheck="true"># django中间件的功能就是在请求还没到路由之前对请求进行处理，在flask中对应着请求扩展</span>
+    <span class="token comment" spellcheck="true"># 而flask中间件则是通过对象的实例化去给请求生成过程添加额外功能</span>
+
+       <span class="token comment" spellcheck="true"># 在执行app.run方法的时候，最终执行的是run_simple最后执行app()也就是调用了app类的__call__方法内的self.wsgi_app()</span>
+    <span class="token comment" spellcheck="true"># 所以我们可以在run之前把wsgi_app()放到我们自定义的中间件对象中</span>
+    <span class="token comment" spellcheck="true"># 把原来的wsgi_app替换成新的，但是也要保证原来的功能执行了</span>
+    <span class="token comment" spellcheck="true"># ps：基本不用</span></code></pre>
+<h2 id="二、猴子补丁（扩展）"><a href="#二、猴子补丁（扩展）" class="headerlink" title="二、猴子补丁（扩展）"></a>二、猴子补丁（扩展）</h2><pre class=" language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 只是一个概念</span>
+<span class="token comment" spellcheck="true"># 比如我一个项目中用的全是json，如果我想全都换成ujson来增加性能</span>
+<span class="token comment" spellcheck="true"># 可以在每个页面都写</span>
+<span class="token keyword">import</span> ujson <span class="token keyword">as</span> json
+<span class="token comment" spellcheck="true"># 但是这样太麻烦了</span>
+<span class="token comment" spellcheck="true"># 而猴子补丁就利用了python一切皆对象的理念，在程序运行过程中，动态修改方法</span>
+
+<span class="token comment" spellcheck="true"># class Monkey():</span>
+<span class="token comment" spellcheck="true">#     def play(self):</span>
+<span class="token comment" spellcheck="true">#         print('猴子在玩')</span>
+<span class="token comment" spellcheck="true"># class Dog():</span>
+<span class="token comment" spellcheck="true">#     def play(self):</span>
+<span class="token comment" spellcheck="true">#         print('狗子在玩')</span>
+<span class="token comment" spellcheck="true"># m=Monkey()</span>
+<span class="token comment" spellcheck="true"># # m.play()</span>
+<span class="token comment" spellcheck="true"># m.play=Dog().play</span>
+<span class="token comment" spellcheck="true"># m.play()</span>
+
+<span class="token comment" spellcheck="true"># 猴子补丁可以放在项目的入口，用新模块替换原来的模块，名字保持不变</span></code></pre>
+<h2 id="三、蓝图（blueprint）"><a href="#三、蓝图（blueprint）" class="headerlink" title="三、蓝图（blueprint）"></a>三、蓝图（blueprint）</h2><p>为了防止项目大了之后全局app的循环导入问题</p>
+<pre class=" language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 蓝图使用</span>
+
+<span class="token comment" spellcheck="true"># 小型项目文件目录</span>
+<span class="token operator">-</span>flask_pro
+    <span class="token operator">-</span>flask_test
+        <span class="token operator">-</span>__init__<span class="token punctuation">.</span>py
+        <span class="token operator">-</span>static
+        <span class="token operator">-</span>templates
+        <span class="token operator">-</span>views
+            <span class="token operator">-</span>order<span class="token punctuation">.</span>py
+            <span class="token operator">-</span>user<span class="token punctuation">.</span>py
+     <span class="token operator">-</span>manage<span class="token punctuation">.</span>py 
+
+<span class="token comment" spellcheck="true"># 1 注册蓝图</span>
+<span class="token comment" spellcheck="true"># 在init中 </span>
+<span class="token keyword">from</span> flask <span class="token keyword">import</span>  Flask
+app<span class="token operator">=</span>Flask<span class="token punctuation">(</span>__name__<span class="token punctuation">)</span>
+<span class="token keyword">from</span> flask_test<span class="token punctuation">.</span>views <span class="token keyword">import</span> user
+<span class="token keyword">from</span> flask_test<span class="token punctuation">.</span>views <span class="token keyword">import</span> order
+app<span class="token punctuation">.</span>register_blueprint<span class="token punctuation">(</span>user<span class="token punctuation">.</span>us<span class="token punctuation">)</span>
+app<span class="token punctuation">.</span>register_blueprint<span class="token punctuation">(</span>order<span class="token punctuation">.</span>ord<span class="token punctuation">)</span>
+
+
+<span class="token comment" spellcheck="true"># 2 使用蓝图</span>
+<span class="token comment" spellcheck="true"># 在视图页面user</span>
+<span class="token keyword">from</span> flask <span class="token keyword">import</span> Blueprint
+us<span class="token operator">=</span>Blueprint<span class="token punctuation">(</span><span class="token string">'user'</span><span class="token punctuation">,</span>__name__<span class="token punctuation">)</span>
+
+@us<span class="token punctuation">.</span>route<span class="token punctuation">(</span><span class="token string">'/login'</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">login</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> <span class="token string">'login'</span>
+
+
+<span class="token comment" spellcheck="true"># 蓝图也可以做路由分发</span>
+<span class="token comment" spellcheck="true"># Blueprint（）中传参url_prefix = '/ooo' 表示该蓝图的根目录是/ooo</span>
+<span class="token comment" spellcheck="true"># 传参 template_foder=‘xxx’ 会在当前目录找template对应的文件当做这个蓝图的模版目录</span></code></pre>
+<h2 id="四、partal偏函数（扩展）"><a href="#四、partal偏函数（扩展）" class="headerlink" title="四、partal偏函数（扩展）"></a>四、partal偏函数（扩展）</h2><pre class=" language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 偏函数的第一个参数可以放一个函数的内存地址</span>
+<span class="token comment" spellcheck="true"># 后续参数为这个函数的参数，如果传的少了，这个偏函数的返回结果是一个新的函数</span>
+<span class="token comment" spellcheck="true"># 这个函数已经通过偏函数为前几个参数传了值，后续只要补上后面的参数即可</span>
+<span class="token keyword">from</span> functools <span class="token keyword">import</span> partial
+<span class="token keyword">def</span> <span class="token function">test</span><span class="token punctuation">(</span>a<span class="token punctuation">,</span>b<span class="token punctuation">,</span>c<span class="token punctuation">,</span>d<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> a<span class="token operator">+</span>b<span class="token operator">+</span>c<span class="token operator">+</span>d
+
+tes<span class="token operator">=</span>partial<span class="token punctuation">(</span>test<span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">2</span><span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>tes<span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">)</span></code></pre>
+<h2 id="五、threading-local"><a href="#五、threading-local" class="headerlink" title="五、threading.local"></a>五、threading.local</h2><p>flask实现每次请求都是不同的request但是这个request是全局变量的原因</p>
+<p>当一个请求来的时候，uwsgi为我们开启了一个线程/协程</p>
+<p>此时request作为全局变量是放在解释器中的，也就是如果多线程去操作这个数据的话必定会发生数据错乱，此时我们要保证数据不乱，同时不能用锁来影响我们的并发</p>
+<pre class=" language-python"><code class="language-python"><span class="token keyword">try</span><span class="token punctuation">:</span>
+    <span class="token keyword">from</span> greenlet <span class="token keyword">import</span> getcurrent <span class="token keyword">as</span> get_ident
+<span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+    <span class="token keyword">from</span> threading <span class="token keyword">import</span> get_ident
+<span class="token comment" spellcheck="true"># 上面的代码保证了线程和协程都能有独自的id号</span>
+<span class="token comment" spellcheck="true"># 因为如果在线程里开设了多个协程，只获取线程id就是一样的</span>
+<span class="token keyword">from</span> threading <span class="token keyword">import</span> Thread
+<span class="token keyword">import</span> time
+<span class="token keyword">class</span> <span class="token class-name">Local</span><span class="token punctuation">(</span>object<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        object<span class="token punctuation">.</span>__setattr__<span class="token punctuation">(</span>self<span class="token punctuation">,</span><span class="token string">'storage'</span><span class="token punctuation">,</span><span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">)</span>
+    <span class="token keyword">def</span> <span class="token function">__setattr__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> k<span class="token punctuation">,</span> v<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        ident <span class="token operator">=</span> get_ident<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> ident <span class="token keyword">in</span> self<span class="token punctuation">.</span>storage<span class="token punctuation">:</span>
+            <span class="token comment" spellcheck="true"># storage：｛线程id：app对象，。。｝</span>
+             self<span class="token punctuation">.</span>storage<span class="token punctuation">[</span>ident<span class="token punctuation">]</span><span class="token punctuation">[</span>k<span class="token punctuation">]</span> <span class="token operator">=</span> v
+         <span class="token keyword">else</span><span class="token punctuation">:</span>
+             self<span class="token punctuation">.</span>storage<span class="token punctuation">[</span>ident<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token punctuation">{</span>k<span class="token punctuation">:</span> v<span class="token punctuation">}</span>
+    <span class="token keyword">def</span> <span class="token function">__getattr__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> k<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        ident <span class="token operator">=</span> get_ident<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> self<span class="token punctuation">.</span>storage<span class="token punctuation">[</span>ident<span class="token punctuation">]</span><span class="token punctuation">[</span>k<span class="token punctuation">]</span>
+obj <span class="token operator">=</span> Local<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">task</span><span class="token punctuation">(</span>arg<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    obj<span class="token punctuation">.</span>val <span class="token operator">=</span> arg
+    <span class="token comment" spellcheck="true"># obj.xxx = arg</span>
+
+    <span class="token keyword">print</span><span class="token punctuation">(</span>obj<span class="token punctuation">.</span>val<span class="token punctuation">)</span>
+<span class="token keyword">for</span> i <span class="token keyword">in</span> range<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    t <span class="token operator">=</span> Thread<span class="token punctuation">(</span>target<span class="token operator">=</span>task<span class="token punctuation">,</span>args<span class="token operator">=</span><span class="token punctuation">(</span>i<span class="token punctuation">,</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    t<span class="token punctuation">.</span>start<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+<h2 id="六、请求上下文执行流程"><a href="#六、请求上下文执行流程" class="headerlink" title="六、请求上下文执行流程"></a>六、请求上下文执行流程</h2><pre class=" language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 第一步 app.run 找到核心逻辑代码</span>
+<span class="token comment" spellcheck="true"># 最终调用了werkzeug的run_simple，然后传了一堆配置参数，这个函数会调用执行app</span>
+<span class="token comment" spellcheck="true"># 也就是会执行到Flask类的__call__方法</span>
+<span class="token comment" spellcheck="true"># 这里又调用了wsgi_app方法，这就是整个请求流程的核心代码</span>
+
+<span class="token comment" spellcheck="true"># 第二步 解析wsgi_app方法</span>
+<span class="token comment" spellcheck="true"># 这一步返回了RequestContext对象，内部封装了本次请求request，session等信息</span>
+ctx <span class="token operator">=</span> self<span class="token punctuation">.</span>request_context<span class="token punctuation">(</span>environ<span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 上面已经知道了这个ctx就是RequestContext对象</span>
+ctx<span class="token punctuation">.</span>push<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 这个push的最后为我们设置了真正的session</span>
+<span class="token comment" spellcheck="true"># 在这之上调用了_request_ctx_stack.push</span>
+_request_ctx_stack<span class="token punctuation">.</span>push<span class="token punctuation">(</span>self<span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># _request_ctx_stack是Flask创建出来就产生了的顶级变量，总共有6个</span>
+<span class="token comment" spellcheck="true"># 它是由LocalStack类实例化得到的</span>
+_request_ctx_stack <span class="token operator">=</span> LocalStack<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 也就是我们上面找的push实际上是LocalStack的函数</span>
+    <span class="token keyword">def</span> <span class="token function">push</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> obj<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        rv <span class="token operator">=</span> getattr<span class="token punctuation">(</span>self<span class="token punctuation">.</span>_local<span class="token punctuation">,</span> <span class="token string">"stack"</span><span class="token punctuation">,</span> None<span class="token punctuation">)</span>
+        <span class="token keyword">if</span> rv <span class="token keyword">is</span> None<span class="token punctuation">:</span>
+            <span class="token comment" spellcheck="true"># _local是flask自带的local对象</span>
+            <span class="token comment" spellcheck="true"># 他的特点是不同线程放的值只有自己这次请求能用</span>
+            self<span class="token punctuation">.</span>_local<span class="token punctuation">.</span>stack <span class="token operator">=</span> rv <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+        <span class="token comment" spellcheck="true"># obj是ctx对象</span>
+        rv<span class="token punctuation">.</span>append<span class="token punctuation">(</span>obj<span class="token punctuation">)</span>
+        <span class="token keyword">return</span> rv
+<span class="token comment" spellcheck="true"># 继续解析wsgi_app</span>
+<span class="token comment" spellcheck="true"># 这一步从字面上意思就是把请求对象转化成响应对象，内部应该就是请求流程的整体逻辑了</span>
+response <span class="token operator">=</span> self<span class="token punctuation">.</span>full_dispatch_request<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+  <span class="token keyword">def</span> <span class="token function">full_dispatch_request</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token comment" spellcheck="true"># 这是第一次请求时触发的被before_first装饰的函数</span>
+        <span class="token comment" spellcheck="true"># 内部就是执行了全部的这些函数然后把标志第一次的参数改成True</span>
+        self<span class="token punctuation">.</span>try_trigger_before_first_request_functions<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">try</span><span class="token punctuation">:</span>
+            <span class="token comment" spellcheck="true"># 信号相关</span>
+            request_started<span class="token punctuation">.</span>send<span class="token punctuation">(</span>self<span class="token punctuation">)</span>
+            <span class="token comment" spellcheck="true"># 被before_request装饰的函数，所以他的返回值已经被限定死了</span>
+            rv <span class="token operator">=</span> self<span class="token punctuation">.</span>preprocess_request<span class="token punctuation">(</span><span class="token punctuation">)</span>
+            <span class="token keyword">if</span> rv <span class="token keyword">is</span> None<span class="token punctuation">:</span>
+                <span class="token comment" spellcheck="true"># 这里真正的根据路由执行视图函数</span>
+                rv <span class="token operator">=</span> self<span class="token punctuation">.</span>dispatch_request<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+            rv <span class="token operator">=</span> self<span class="token punctuation">.</span>handle_user_exception<span class="token punctuation">(</span>e<span class="token punctuation">)</span>
+        <span class="token comment" spellcheck="true"># rv是我们的响应对象，这里通过make_response处理了保证字符串也能转成response对象</span>
+        <span class="token comment" spellcheck="true"># 然后它还会调用视图中被after_reuqest装饰的函数，内部规定了传值和接收值，所以我们的请求扩展要那么写</span>
+        <span class="token comment" spellcheck="true"># 还会把session放到rv中，也就是在请求扩展中是可以拿到session的</span>
+        <span class="token keyword">return</span> self<span class="token punctuation">.</span>finalize_request<span class="token punctuation">(</span>rv<span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 继续解析wsgi_app</span>
+<span class="token comment" spellcheck="true"># 上面已经拿到响应对象了，也就是其实到这里请求的所有流程已经结束了，在这最后会把我们的ctx对象从local中移除</span>
+ctx<span class="token punctuation">.</span>auto_pop<span class="token punctuation">(</span>error<span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 总结：从run方法开始，调用了run就是调用了werkzeug的run_simple</span>
+<span class="token comment" spellcheck="true"># run_simple配置了很多参数调用了app，也就是调用了Flask类的__call__方法</span>
+<span class="token comment" spellcheck="true"># 内部又调用了wsgi_app方法，这是Flask请求响应的核心逻辑</span>
+<span class="token comment" spellcheck="true"># 先会生成一个ctx对象，这是本次请求的所有信息（request，session，app）通过线程号作为key，信息作为value放到local字典中，所以每次取的时候都是唯一的</span>
+<span class="token comment" spellcheck="true"># 然后去执行了请求扩展的一些函数，比如befor_request</span>
+<span class="token comment" spellcheck="true"># 请求处理完成之后就是获取响应对象，就是执行了视图函数，返回的响应对象需要传给响应扩展函数</span>
+<span class="token comment" spellcheck="true"># 就是那些被after_request装饰的函数，执行完成后获得真正的响应对象，返回给前端</span>
+<span class="token comment" spellcheck="true"># 最后要把ctx对象从原来的字典中移除，因为本次请求已经完成</span></code></pre>
+<p><strong>如何全局拿到唯一的request对象</strong></p>
+<pre class=" language-python"><code class="language-python"><span class="token comment" spellcheck="true"># request是视图中的全局变量，但是却唯一</span>
+<span class="token comment" spellcheck="true"># 这里使用偏函数包装起来，此时并没有执行</span>
+<span class="token comment" spellcheck="true"># 我们可以打印request对象的方法，那么LocalProxy内部必定重写了__str__方法</span>
+request <span class="token operator">=</span> LocalProxy<span class="token punctuation">(</span>partial<span class="token punctuation">(</span>_lookup_req_object<span class="token punctuation">,</span> <span class="token string">"request"</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 打印的返回值是obj，这里可以猜测obj就是request对象</span>
+obj <span class="token operator">=</span> self<span class="token punctuation">.</span>_get_current_object<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    <span class="token keyword">def</span> <span class="token function">_get_current_object</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token comment" spellcheck="true"># 去找LocalProxy内部的__local</span>
+        <span class="token keyword">if</span> <span class="token operator">not</span> hasattr<span class="token punctuation">(</span>self<span class="token punctuation">.</span>__local<span class="token punctuation">,</span> <span class="token string">"__release_local__"</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token keyword">return</span> self<span class="token punctuation">.</span>__local<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># 这里用了封装，所以我们可以在__init__中找到_LocalProxy__local</span>
+    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> local<span class="token punctuation">,</span> name<span class="token operator">=</span>None<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        object<span class="token punctuation">.</span>__setattr__<span class="token punctuation">(</span>self<span class="token punctuation">,</span> <span class="token string">"_LocalProxy__local"</span><span class="token punctuation">,</span> local<span class="token punctuation">)</span>
+        object<span class="token punctuation">.</span>__setattr__<span class="token punctuation">(</span>self<span class="token punctuation">,</span> <span class="token string">"__name__"</span><span class="token punctuation">,</span> name<span class="token punctuation">)</span>
+        <span class="token keyword">if</span> callable<span class="token punctuation">(</span>local<span class="token punctuation">)</span> <span class="token operator">and</span> <span class="token operator">not</span> hasattr<span class="token punctuation">(</span>local<span class="token punctuation">,</span> <span class="token string">"__release_local__"</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            object<span class="token punctuation">.</span>__setattr__<span class="token punctuation">(</span>self<span class="token punctuation">,</span> <span class="token string">"__wrapped__"</span><span class="token punctuation">,</span> local<span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true"># local是我们在类实例化的时候通过偏函数传进来的</span>
+<span class="token comment" spellcheck="true"># 这时候再看这一句实例化的代码就能理解了，此时实例化的过程中传进来的偏函数内存地址</span>
+<span class="token comment" spellcheck="true"># 在__init__中被调用执行获得了执行的记过，而这个结果返回给了__str__让他去打印</span>
+<span class="token comment" spellcheck="true"># 之前就说了视图中打印的request对象是唯一的，所以现在只要知道_lookup_req_object是什么就ok了</span>
+LocalProxy<span class="token punctuation">(</span>partial<span class="token punctuation">(</span>_lookup_req_object<span class="token punctuation">,</span> <span class="token string">"request"</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">_lookup_req_object</span><span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true"># 去local中拿到ctx对象（上面就解析过，ctx包含了request，app，session）</span>
+    top <span class="token operator">=</span> _request_ctx_stack<span class="token punctuation">.</span>top
+    <span class="token keyword">if</span> top <span class="token keyword">is</span> None<span class="token punctuation">:</span>
+        <span class="token keyword">raise</span> RuntimeError<span class="token punctuation">(</span>_request_ctx_err_msg<span class="token punctuation">)</span>
+    <span class="token comment" spellcheck="true"># name是偏函数传进来的request字符串，通过反射获取了指定ctx对象的request</span>
+    <span class="token keyword">return</span> getattr<span class="token punctuation">(</span>top<span class="token punctuation">,</span> name<span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 至此我们知道了request是如何拿出来唯一的，还有一个小点就是如何拿到request内部的其他对象，request取值都是通过点</span>
+<span class="token comment" spellcheck="true"># 那就必定重写了__getattr__</span>
+    <span class="token keyword">def</span> <span class="token function">__getattr__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> name<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">if</span> name <span class="token operator">==</span> <span class="token string">"__members__"</span><span class="token punctuation">:</span>
+            <span class="token keyword">return</span> dir<span class="token punctuation">(</span>self<span class="token punctuation">.</span>_get_current_object<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token comment" spellcheck="true"># 很清晰，从传过来的name来到request对象中反射</span>
+        <span class="token comment" spellcheck="true"># 比如request.method</span>
+        <span class="token keyword">return</span> getattr<span class="token punctuation">(</span>self<span class="token punctuation">.</span>_get_current_object<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> name<span class="token punctuation">)</span>
+
+<span class="token comment" spellcheck="true"># 总结：Flask中的request虽然是个全局变量但是每次请求拿到的是唯一的，在Flask启动的时候就会创建LocalProxy对象</span>
+<span class="token comment" spellcheck="true"># 它的实例化需要传一个参数，这里用的是偏函数，先从一个方法中通过request在ctx对象中的反射获取唯一的request对象</span>
+<span class="token comment" spellcheck="true"># 然后在视图中打印的时候就会触发LocalProxy对象的__str__方法</span>
+<span class="token comment" spellcheck="true"># 此时会从init中拿到实例化时被封装传进来的local，并执行，得到的就是唯一的那个request对象了</span>
+<span class="token comment" spellcheck="true"># 然后在点取值，比如request.method的时候会触发__getattr__方法，同样是去拿到request对象从内部反射出结果返回</span></code></pre>
+</div><div id="reward-container"><span class="hty-icon-button button-glow" id="reward-button" title="打赏" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === &quot;none&quot;) ? &quot;block&quot; : &quot;none&quot;;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-hand-coin-line"></use></svg></span><div id="reward-comment">点我就给你看点有意思的</div><div id="qr" style="display:none;"><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://gitee.com/huang_zhao/hz/raw/master/hz/alipay.png"><img loading="lazy" src="https://gitee.com/huang_zhao/hz/raw/master/hz/alipay.png" alt="支付宝" title="支付宝"></a><div><span style="color:#00A3EE"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-alipay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://gitee.com/huang_zhao/hz/raw/master/hz/qqpay.jpg"><img loading="lazy" src="https://gitee.com/huang_zhao/hz/raw/master/hz/qqpay.jpg" alt="QQ 支付" title="QQ 支付"></a><div><span style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://gitee.com/huang_zhao/hz/raw/master/hz/wxpay.jpg"><img loading="lazy" src="https://gitee.com/huang_zhao/hz/raw/master/hz/wxpay.jpg" alt="微信支付" title="微信支付"></a><div><span style="color:#2DC100"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-wechat-pay-line"></use></svg></span></div></div></div></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>爱肖彤真是太好了</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="http://huang_zhao.gitee.io/task/2018/06/11/python/%E6%A1%86%E6%9E%B6/Flask%20%E4%B8%AD%E9%97%B4%E4%BB%B6%E3%80%81%E8%93%9D%E5%9B%BE%EF%BC%8C%E8%AF%B7%E6%B1%82%E4%B8%8A%E4%B8%8B%E6%96%87%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/" title="Flask 中间件、蓝图，请求上下文执行流程">http://huang_zhao.gitee.io/task/2018/06/11/python/%E6%A1%86%E6%9E%B6/Flask%20%E4%B8%AD%E9%97%B4%E4%BB%B6%E3%80%81%E8%93%9D%E5%9B%BE%EF%BC%8C%E8%AF%B7%E6%B1%82%E4%B8%8A%E4%B8%8B%E6%96%87%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/task/2019/03/15/python/%E6%A8%A1%E5%9D%97/python%E5%A5%87%E9%97%BB%E6%9D%82%E6%8A%80/" rel="prev" title="python奇闻杂技"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">python奇闻杂技</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/task/2018/05/22/python/%E6%A1%86%E6%9E%B6/Flask%20%E5%88%B6%E5%AE%9A%E5%91%BD%E4%BB%A4%EF%BC%8Csqlachemy/" rel="next" title="Flask 制定命令，sqlachemy"><span class="post-nav-text">Flask 制定命令，sqlachemy</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div id="comment"><div class="comment-tooltip text-center"></div></div></main><footer class="sidebar-translate" id="footer"><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> 爱肖彤真是太好了</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.1.1</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v0.9.7</span></div><div class="live_time"><span>本博客已萌萌哒地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  window.setTimeout(blog_live_time, 1000);
+  const start = new Date('2019-04-12T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="goUp" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><a class="popup-trigger hty-icon-button icon-search" id="search" href="javascript:;" title="搜索"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-search-line"></use></svg></span></a><script>window.addEventListener("DOMContentLoaded", () => {
+  // Handle and trigger popup window
+  document.querySelector(".popup-trigger").addEventListener("click", () => {
+    document.querySelector(".popup").classList.add("show");
+    setTimeout(() => {
+      document.querySelector(".search-input").focus();
+    }, 100);
+  });
+
+  // Monitor main search box
+  const onPopupClose = () => {
+    document.querySelector(".popup").classList.remove("show");
+  };
+
+  document.querySelector(".popup-btn-close").addEventListener("click", () => {
+    onPopupClose();
+  });
+
+  window.addEventListener("keyup", event => {
+    if (event.key === "Escape") {
+      onPopupClose();
+    }
+  });
+});
+</script><script src="/task/js/search/local-search.js" defer></script><div class="popup search-popup"><div class="search-header"><span class="popup-btn-close close-icon hty-icon-button"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-close-line"></use></svg></span></div><div class="search-input-container"><input class="search-input" id="local-search-input" type="text" placeholder="搜索..." value=""></div><div id="local-search-result"></div></div></div><script defer src="/task/js/utils.js"></script><script defer src="/task/js/hexo-theme-yun.js"></script></body></html>

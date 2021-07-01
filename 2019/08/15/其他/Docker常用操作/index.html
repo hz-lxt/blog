@@ -1,0 +1,282 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#0078E7"><meta name="author" content="爱肖彤真是太好了"><meta name="copyright" content="爱肖彤真是太好了"><meta name="generator" content="Hexo 5.1.1"><meta name="theme" content="hexo-theme-yun"><title>Docker常用操作 | 工藤旧二の博客</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&amp;display=swap" media="none" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/star-markdown-css@0.1.19/dist/yun/yun-markdown.min.css"><script src="//at.alicdn.com/t/font_1140697_stqaphw3j4.js" async></script><script src="https://cdn.jsdelivr.net/npm/scrollreveal/dist/scrollreveal.min.js" defer></script><script>document.addEventListener("DOMContentLoaded", () => {
+  [".post-card",".post-content img"].forEach((target)=> {
+    ScrollReveal().reveal(target);
+  })
+});
+</script><link rel="shortcut icon" type="image/svg+xml" href="/task/yun.ico"><link rel="mask-icon" href="/task/yun.ico" color="#0078E7"><link rel="alternate icon" href="/yun.ico"><link rel="preload" href="/task/css/hexo-theme-yun.css" as="style"><link rel="preload" href="/task/js/utils.js" as="script"><link rel="preload" href="/task/js/hexo-theme-yun.js" as="script"><link rel="prefetch" href="/task/js/sidebar.js" as="script"><link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin><link rel="stylesheet" href="/task/css/hexo-theme-yun.css"><link rel="alternate" href="/task/atom.xml" title="工藤旧二の博客" type="application/atom+xml"><script id="yun-config">
+    const Yun = window.Yun || {};
+    window.CONFIG = {"root":"/task/","title":"工藤旧二の博客","version":"0.9.7","anonymous_image":"https://cdn.jsdelivr.net/gh/YunYouJun/cdn/img/avatar/none.jpg","say":{"api":"https://v1.hitokoto.cn","hitokoto":true},"local_search":{"path":"/task/search.xml"},"fireworks":{"colors":["102, 167, 221","62, 131, 225","33, 78, 194"]}};
+  </script><script>(function(){
+  var bp = document.createElement('script');
+  var curProtocol = window.location.protocol.split(':')[0];
+  if (curProtocol === 'https') {
+    bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+  }
+  else {
+    bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+  }
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(bp, s);
+})();</script><meta name="description" content="一、Docker出现的原因1 方便在Docker出现之前，要做一个项目需要有 开发环境 和 上线环境，不同环境之间的配置也不一样，导致开发和运维去上线一个项目就需要一定的成本 比如说我们需要跑的django项目+环境（mysql,redis,es）这是必不可少的 但是Docker可以把项目和环境放到一起，也就是环境不再需要重新搭建，在Docker上就可以很快实现 2 小在这之前虚拟化技术的的应用最">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker常用操作">
+<meta property="og:url" content="http://huang_zhao.gitee.io/task/2019/08/15/%E5%85%B6%E4%BB%96/Docker%E5%B8%B8%E7%94%A8%E6%93%8D%E4%BD%9C/index.html">
+<meta property="og:site_name" content="工藤旧二の博客">
+<meta property="og:description" content="一、Docker出现的原因1 方便在Docker出现之前，要做一个项目需要有 开发环境 和 上线环境，不同环境之间的配置也不一样，导致开发和运维去上线一个项目就需要一定的成本 比如说我们需要跑的django项目+环境（mysql,redis,es）这是必不可少的 但是Docker可以把项目和环境放到一起，也就是环境不再需要重新搭建，在Docker上就可以很快实现 2 小在这之前虚拟化技术的的应用最">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/huang_zhao/hz/raw/master/hz/image-20200828114857826.png">
+<meta property="article:published_time" content="2019-08-15T07:11:55.000Z">
+<meta property="article:modified_time" content="2020-09-04T11:17:40.000Z">
+<meta property="article:author" content="爱肖彤真是太好了">
+<meta property="article:tag" content="Docker">
+<meta property="article:tag" content="容器化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/huang_zhao/hz/raw/master/hz/image-20200828114857826.png"><script src="/task/js/ui/mode.js"></script><link rel="stylesheet" href="/task/css/prism.css" type="text/css"></head><body><script defer src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script defer src="/task/js/ui/fireworks.js"></script><canvas class="fireworks"></canvas><div class="container"><a class="sidebar-toggle hty-icon-button" id="menu-btn"><div class="hamburger hamburger--spin" type="button"><span class="hamburger-box"><span class="hamburger-inner"></span></span></div></a><div class="sidebar-toggle sidebar-overlay"></div><aside class="sidebar"><script src="/task/js/sidebar.js"></script><ul class="sidebar-nav"><li class="sidebar-nav-item sidebar-nav-toc hty-icon-button sidebar-nav-active" data-target="post-toc-wrap" title="文章目录"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-list-ordered"></use></svg></li><li class="sidebar-nav-item sidebar-nav-overview hty-icon-button" data-target="site-overview-wrap" title="站点概览"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-passport-line"></use></svg></li></ul><div class="sidebar-panel" id="site-overview-wrap"><div class="site-info fix-top"><a class="site-author-avatar" href="/task/about/" title="爱肖彤真是太好了"><img width="96" loading="lazy" src="/task/Yun.png" alt="爱肖彤真是太好了"></a><div class="site-author-name"><a href="/task/about/">爱肖彤真是太好了</a></div><a class="site-name" href="/task/about/site.html">工藤旧二の博客</a><sub class="site-subtitle"></sub><div class="site-desciption"></div></div><nav class="site-state"><a class="site-state-item hty-icon-button icon-home" href="/task/" title="首页"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-home-4-line"></use></svg></span></a><div class="site-state-item"><a href="/task/archives/" title="归档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-archive-line"></use></svg></span><span class="site-state-item-count">47</span></a></div><div class="site-state-item"><a href="/task/categories/" title="分类"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-2-line"></use></svg></span><span class="site-state-item-count">2</span></a></div><div class="site-state-item"><a href="/task/tags/" title="标签"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="site-state-item-count">45</span></a></div><a class="site-state-item hty-icon-button" target="_blank" rel="noopener" href="https://yun.yunyoujun.cn" title="文档"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-settings-line"></use></svg></span></a></nav><hr style="margin-bottom:0.5rem"><div class="links-of-author"><a class="links-of-author-item hty-icon-button" rel="noopener" title="RSS" target="_blank" style="color:orange"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-rss-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="QQ" target="_blank" style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="GitHub" target="_blank" style="color:#6e5494"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-github-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="微博" target="_blank" style="color:#E6162D"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-weibo-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="豆瓣" target="_blank" style="color:#007722"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-douban-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://music.163.com/#/user/home?id=552858287" title="网易云音乐" target="_blank" style="color:#C20C0C"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-netease-cloud-music-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="知乎" target="_blank" style="color:#0084FF"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-zhihu-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" href="https://space.bilibili.com/15081363" title="哔哩哔哩" target="_blank" style="color:#FF8EB3"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bilibili-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="Twitter" target="_blank" style="color:#1da1f2"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-twitter-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="Telegram Channel" target="_blank" style="color:#0088CC"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-telegram-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="E-Mail" target="_blank" style="color:#8E71C1"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-mail-line"></use></svg></a><a class="links-of-author-item hty-icon-button" rel="noopener" title="Travelling" target="_blank" style="color:var(--hty-text-color)"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-send-plane-2-line"></use></svg></a></div><hr style="margin:0.5rem 1rem"><div class="links"><a class="links-item hty-icon-button" href="/task/links/" title="我的小伙伴们" style="color:dodgerblue"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-genderless-line"></use></svg></a></div><br><a class="links-item hty-icon-button" id="toggle-mode-btn" href="javascript:;" title="Mode" style="color: #f1cb64"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-contrast-2-line"></use></svg></a></div><div class="sidebar-panel sidebar-panel-active" id="post-toc-wrap"><div class="post-toc"><div class="post-toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81Docker%E5%87%BA%E7%8E%B0%E7%9A%84%E5%8E%9F%E5%9B%A0"><span class="toc-text">一、Docker出现的原因</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%96%B9%E4%BE%BF"><span class="toc-text">1 方便</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%B0%8F"><span class="toc-text">2 小</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Docker%E5%9C%A8DevOps%E4%B8%8A%E7%9A%84%E4%BD%93%E7%8E%B0"><span class="toc-text">3 Docker在DevOps上的体现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E8%A1%A5%E5%85%85"><span class="toc-text">4 补充</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Docker%E5%AE%89%E8%A3%85"><span class="toc-text">二、Docker安装</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Docker%E5%9F%BA%E6%9C%AC%E7%BB%84%E6%88%90"><span class="toc-text">1 Docker基本组成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%89%E8%A3%85"><span class="toc-text">2 安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93"><span class="toc-text">3 远程仓库</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Docker%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C"><span class="toc-text">三、Docker基本操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E9%95%9C%E5%83%8F%E6%93%8D%E4%BD%9C"><span class="toc-text">1 镜像操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%B9%E5%99%A8%E6%93%8D%E4%BD%9C"><span class="toc-text">2 容器操作</span></a></li></ol></li></ol></div></div></div></aside><main class="sidebar-translate" id="content"><div id="post"><article class="post-block" itemscope itemtype="https://schema.org/Article"><link itemprop="mainEntityOfPage" href="http://huang_zhao.gitee.io/task/task/2019/08/15/%E5%85%B6%E4%BB%96/Docker%E5%B8%B8%E7%94%A8%E6%93%8D%E4%BD%9C/"><span hidden itemprop="author" itemscope itemtype="https://schema.org/Person"><meta itemprop="name" content="爱肖彤真是太好了"><meta itemprop="description"></span><span hidden itemprop="publisher" itemscope itemtype="https://schema.org/Organization"><meta itemprop="name" content="工藤旧二の博客"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Docker常用操作</h1><div class="post-meta"><div class="post-time" style="display:block"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-line"></use></svg></span> <time title="创建时间：2019-08-15 15:11:55" itemprop="dateCreated datePublished" datetime="2019-08-15T15:11:55+08:00">2019-08-15</time><span class="post-meta-divider">-</span><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-calendar-2-line"></use></svg></span> <time title="修改时间：2020-09-04 19:17:40" itemprop="dateModified" datetime="2020-09-04T19:17:40+08:00">2020-09-04</time></div><span class="post-count"><span class="post-symbolcount"><span class="post-meta-item-icon" title="本文字数"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-file-word-line"></use></svg></span> <span title="本文字数">2.2k</span><span class="post-meta-divider">-</span><span class="post-meta-item-icon" title="阅读时长"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-timer-line"></use></svg></span> <span title="阅读时长">8m</span></span></span><div class="post-classify"><span class="post-category"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-folder-line"></use></svg></span> <span itemprop="about" itemscope itemtype="https://schema.org/Thing"><a class="category" href="/task/categories/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/" style="--text-color:var(--hty-text-color)" itemprop="url" rel="index"><span itemprop="text">技术分享</span></a></span></span><span class="post-tag"><span class="post-meta-divider">-</span><a class="tag" href="/task/tags/Docker/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">Docker</span></a><a class="tag" href="/task/tags/%E5%AE%B9%E5%99%A8%E5%8C%96/" style="--text-color:var(--hty-text-color)"><span class="post-meta-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-price-tag-3-line"></use></svg></span><span class="tag-name">容器化</span></a></span></div></div></header><section class="post-body" itemprop="articleBody"><div class="post-content markdown-body" style="--smc-primary:#0078E7;"><h2 id="一、Docker出现的原因"><a href="#一、Docker出现的原因" class="headerlink" title="一、Docker出现的原因"></a>一、Docker出现的原因</h2><h3 id="1-方便"><a href="#1-方便" class="headerlink" title="1 方便"></a>1 方便</h3><p>在Docker出现之前，要做一个项目需要有 <strong>开发环境</strong> 和 <strong>上线环境</strong>，不同环境之间的配置也不一样，导致开发和运维去上线一个项目就需要一定的成本</p>
+<p>比如说我们需要跑的django项目+环境（mysql,redis,es）这是必不可少的</p>
+<p>但是Docker可以把项目和环境放到一起，也就是环境不再需要重新搭建，在Docker上就可以很快实现</p>
+<h3 id="2-小"><a href="#2-小" class="headerlink" title="2 小"></a>2 小</h3><p>在这之前虚拟化技术的的应用最起码需要一个vm软件+系统镜像，这两个东西不仅非常占用内存，还占用硬盘，普通一个系统镜像就需要十几个g</p>
+<p>而docker是为了实用而生的用的是容器化技术，所以再Docker容器中不会有那么全的整体系统，而是装载了我们需要的环境，不同的Docker镜像只有十几m</p>
+<p><strong>总结docker和虚拟技术的不同</strong></p>
+<ul>
+<li>传统虚拟机，需要虚拟出一套完整的硬件，运行一个完整的操作系统，上面运行软件</li>
+<li>容器化技术，容器内部没有内核只有依赖包和软件，直接运行在宿主机上，容器之间也是相互隔离保证软件的安全，所以快的一批，且安全</li>
+</ul>
+<h3 id="3-Docker在DevOps上的体现"><a href="#3-Docker在DevOps上的体现" class="headerlink" title="3 Docker在DevOps上的体现"></a>3 Docker在DevOps上的体现</h3><blockquote>
+<p>DevOps（开发、运维）</p>
+</blockquote>
+<p><strong>应用更快速的交付和部署</strong></p>
+<ul>
+<li>传统：一堆帮助文档，安装程序</li>
+<li>Docker：打包镜像发布测试，一键上线</li>
+</ul>
+<p><strong>更快捷的升级和扩缩容</strong></p>
+<ul>
+<li>传统：升级运行环境需要一个一个升级，比如redis升级，mysql升级</li>
+<li>Docker：环境是打包好的，可以整体升级</li>
+</ul>
+<p>扩展，做负载均衡</p>
+<ul>
+<li>传统：就是重新在一个服务器上部署一套运行环境</li>
+<li>Docker：直接运行镜像即可</li>
+</ul>
+<p><strong>更简单的系统运维</strong></p>
+<p>开发测试环境高度一致</p>
+<p><strong>更高效的计算机利用资源</strong></p>
+<p>Docker是内核级别的虚拟化，可以在一个物理机上运行很多个容器实例</p>
+<h3 id="4-补充"><a href="#4-补充" class="headerlink" title="4 补充"></a>4 补充</h3><pre><code>0 各种软件用什么语言写的
+    zabbix（监控软件）：php
+    ansible（批量管理主机，执行命令,无angent）：python
+    openstack（云计算，管理虚拟机）：python
+    jekins（ci/di）：自动化部署，java
+    salstack(批量管理主机，执行命令，有angent):python
+    普罗米修斯（Prometheus，监控）：go写的
+    docker：go
+    k8s：go
+
+1 虚拟化技术有两类很核心的软件，一种是在硬件上虚拟出不同的操作系统，一种是管理这些操作系统
+    - vmware，kvm，docker 虚拟化操作系统（前两者虚拟的更加真实）
+    - openstach，k8s，阿里飞天 管理不同的虚拟化出来的操作系统
+    - k8s主要是管理量比较大的容器
+    - 虚拟化的核心：打破实体结构间不可分割的障碍
+2 Docker是一个客户端-服务器（C/S）架构程序（mysql，redis都是cs架构），整套RESTful API</code></pre>
+<h2 id="二、Docker安装"><a href="#二、Docker安装" class="headerlink" title="二、Docker安装"></a>二、Docker安装</h2><h3 id="1-Docker基本组成"><a href="#1-Docker基本组成" class="headerlink" title="1 Docker基本组成"></a>1 Docker基本组成</h3><p><img src="https://gitee.com/huang_zhao/hz/raw/master/hz/image-20200828114857826.png" alt="image-20200828114857826" loading="lazy"></p>
+<p><strong>镜像（image）：</strong></p>
+<p>是一个模版，用这个模块去创建容器对象，镜像和容器就想是类和对象的关系一样</p>
+<p>镜像可以实例化出多个容器对象</p>
+<p><strong>容器（container）：</strong></p>
+<p>利用容器技术可以运行一个或一组应用，有启动，停止，删除等基本命令</p>
+<p>这个容器可以理解为一个简易的linux系统</p>
+<p><strong>仓库（repository）：</strong></p>
+<p>就是存放镜像的地方</p>
+<h3 id="2-安装"><a href="#2-安装" class="headerlink" title="2 安装"></a>2 安装</h3><pre class=" language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 1 卸载旧版本</span>
+yum remove docker \
+                  docker<span class="token operator">-</span>client \
+                  docker<span class="token operator">-</span>client<span class="token operator">-</span>latest \
+                  docker<span class="token operator">-</span>common \
+                  docker<span class="token operator">-</span>latest \
+                  docker<span class="token operator">-</span>latest<span class="token operator">-</span>logrotate \
+                  docker<span class="token operator">-</span>logrotate \
+                  docker<span class="token operator">-</span>engine
+
+<span class="token comment" spellcheck="true"># 2 需要的安装包</span>
+yum install <span class="token operator">-</span>y yum<span class="token operator">-</span>utils
+
+<span class="token comment" spellcheck="true"># 3 设置镜像仓库，默认是国外的</span>
+yum<span class="token operator">-</span>config<span class="token operator">-</span>manager \
+    <span class="token operator">-</span><span class="token operator">-</span>add<span class="token operator">-</span>repo \
+    https<span class="token punctuation">:</span><span class="token operator">//</span>download<span class="token punctuation">.</span>docker<span class="token punctuation">.</span>com<span class="token operator">/</span>linux<span class="token operator">/</span>centos<span class="token operator">/</span>docker<span class="token operator">-</span>ce<span class="token punctuation">.</span>repo
+
+yum<span class="token operator">-</span>config<span class="token operator">-</span>manager \
+    <span class="token operator">-</span><span class="token operator">-</span>add<span class="token operator">-</span>repo \
+    http<span class="token punctuation">:</span><span class="token operator">//</span>mirrors<span class="token punctuation">.</span>aliyun<span class="token punctuation">.</span>com<span class="token operator">/</span>docker<span class="token operator">-</span>ce<span class="token operator">/</span>linux<span class="token operator">/</span>centos<span class="token operator">/</span>docker<span class="token operator">-</span>ce<span class="token punctuation">.</span>repo
+<span class="token comment" spellcheck="true"># 更新yum软件包索引</span>
+yum makecache fast
+
+<span class="token comment" spellcheck="true"># 4 安装docker ce社区，ee企业</span>
+yum install docker<span class="token operator">-</span>ce docker<span class="token operator">-</span>ce<span class="token operator">-</span>cli containerd<span class="token punctuation">.</span>io
+
+<span class="token comment" spellcheck="true"># 5 检查版本</span>
+docker version
+
+<span class="token comment" spellcheck="true"># 6 启动第一个镜像hello-word</span>
+docker run hello<span class="token operator">-</span>word 
+<span class="token comment" spellcheck="true"># 本地肯定是没有的，所以是去远程仓库拉下来的镜像</span>
+
+<span class="token comment" spellcheck="true"># 7 启动docker服务</span>
+systemctl start docker
+
+<span class="token comment" spellcheck="true"># 8 停止docker服务，重启docker服务</span>
+systemctl stop docker
+systemctl restart docker
+
+<span class="token comment" spellcheck="true"># 9 开机启动    </span>
+systemctl enable docker
+
+<span class="token comment" spellcheck="true"># 10 查看概要信息</span>
+docker info</code></pre>
+<h3 id="3-远程仓库"><a href="#3-远程仓库" class="headerlink" title="3 远程仓库"></a>3 远程仓库</h3><p>如果感觉拉去镜像非常慢的话，可以配置一下备份镜像</p>
+<pre class=" language-python"><code class="language-python"><span class="token comment" spellcheck="true"># 注册，登录 https://hub.docker.com/</span>
+<span class="token comment" spellcheck="true"># 你可以上传镜像（类似于github），你把你制作的镜像传上去，别人可以下载使用</span>
+
+<span class="token comment" spellcheck="true"># 配置加速（之前去https://hub.docker.com/），阿里云，清华，做了一个备份，配置好以后，再拉镜像会去国内地址拉取</span>
+第一步：vi <span class="token operator">/</span>etc<span class="token operator">/</span>docker<span class="token operator">/</span>daemon<span class="token punctuation">.</span>json  
+第二步：
+<span class="token punctuation">{</span>
+<span class="token string">"registry-mirrors"</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"https://docker.mirrors.ustc.edu.cn"</span><span class="token punctuation">]</span>
+<span class="token punctuation">}</span></code></pre>
+<h2 id="三、Docker基本操作"><a href="#三、Docker基本操作" class="headerlink" title="三、Docker基本操作"></a>三、Docker基本操作</h2><h3 id="1-镜像操作"><a href="#1-镜像操作" class="headerlink" title="1 镜像操作"></a>1 镜像操作</h3><pre class=" language-python"><code class="language-python"><span class="token number">0</span> 查找镜像
+    方式一：https<span class="token punctuation">:</span><span class="token operator">//</span>hub<span class="token punctuation">.</span>docker<span class="token punctuation">.</span>com<span class="token operator">/</span> 点点点搜索（你用这种）
+    方式二：docker search 
+<span class="token number">1</span> 拉取镜像 
+    docker pull hello<span class="token operator">-</span>world  最新版本latest
+    docker pull hello<span class="token operator">-</span>world<span class="token punctuation">:</span>nanoserver
+<span class="token number">2</span> 查看机器上有哪些镜像
+     docker images
+    REPOSITORY  TAG   IMAGE ID   CREATED   SIZE
+    镜像名字      版本   id号       创建时间   大小
+<span class="token number">3</span> 删除镜像
+    docker rmi 镜像名字<span class="token operator">/</span>id号（<span class="token comment" spellcheck="true"># 如果还有基于这个镜像的容器，是不允许删除镜像的，先删除容器，再删除images）</span>
+
+
+<span class="token number">4</span> 练习：拉取python3<span class="token number">.6</span>镜像，redis最新镜像，mysql5<span class="token number">.7</span>镜像
+    docker pull python<span class="token punctuation">:</span><span class="token number">3.6</span>
+    docker pull redis
+    docker pull mysql5<span class="token number">.7</span>
+    docker pull centos<span class="token punctuation">:</span>centos7
+
+<span class="token number">5</span> 镜像是什么？
+    <span class="token operator">-</span>就是一堆文件，这堆文件通过docker跑起来，就是容器，你现在就把他当成，一个操作系统内跑了这个软件（centos<span class="token operator">+</span>redis）
+    <span class="token operator">-</span>假设centos7的镜像跑起来，容器你就当成在你宿主机上跑了一个centos7的操作系统（虚拟机）
+
+
+
+ <span class="token number">6</span> 补充（了解）
+    docker image inspect <span class="token number">46ff56815c7c</span>
+    docker image ls
+    docker image rm
+</code></pre>
+<h3 id="2-容器操作"><a href="#2-容器操作" class="headerlink" title="2 容器操作"></a>2 容器操作</h3><pre class=" language-python"><code class="language-python"><span class="token number">1</span> 删除容器
+ docker rm 容器名字<span class="token operator">/</span>容器id
+
+<span class="token number">2</span> 启动并运行容器
+    <span class="token comment" spellcheck="true"># 通过centos:centos7镜像，创建一个容器名字叫mycentos，并且把它运行起来</span>
+    docker run <span class="token operator">-</span>di <span class="token operator">-</span><span class="token operator">-</span>name<span class="token operator">=</span>mycentos centos<span class="token punctuation">:</span>centos7
+    打印出容器的id号
+<span class="token number">3</span> 查看机器上正在运行的容器
+    docker ps
+<span class="token number">4</span> 查看宿主机上所有的容器（包括停止的）
+    docker ps <span class="token operator">-</span>a
+<span class="token number">5</span> 停止容器
+    docker stop 容器名字<span class="token operator">/</span>id号
+<span class="token number">6</span> 启动容器
+    docker start 容器id<span class="token operator">/</span>名字
+
+<span class="token number">7</span> 容器的创建和启动（<span class="token operator">**</span><span class="token operator">**</span><span class="token operator">**</span>）
+    <span class="token operator">-</span>创建：docker create <span class="token operator">-</span><span class="token operator">-</span>name<span class="token operator">=</span>xxx 镜像名：镜像版本 启动命令（默认启动bash，如果不是执行会夯住的命令，就会直接结束这个容器）
+    docker create <span class="token operator">-</span><span class="token operator">-</span>name<span class="token operator">=</span>test<span class="token operator">-</span>container centos<span class="token punctuation">:</span>centos7 ps <span class="token operator">-</span>A
+    <span class="token operator">-</span>启动
+    docker start test<span class="token operator">-</span>container
+
+    <span class="token operator">-</span>容器一直运行的原因
+        <span class="token operator">-</span>它有一条前台进程<span class="token punctuation">,</span>一直在运行
+        <span class="token operator">-</span>以后如果自己制作的镜像，运行起容器，必须有个可以夯住的命令
+        <span class="token operator">-</span>如果该命令结束，该容器也就结束了
+
+    <span class="token operator">-</span>创建并启动（run）
+    <span class="token operator">-</span>i：表示运行容器
+    <span class="token operator">-</span>t：表示容器启动后会进入其命令行。
+    <span class="token operator">-</span>d：在run后面加上<span class="token operator">-</span>d参数<span class="token punctuation">,</span>则会创建一个守护式容器在后台运行（这样创建容器后不会自动登录容器，如果只加<span class="token operator">-</span>i <span class="token operator">-</span>t两个参数，创建后就会自动进去容器）。
+    <span class="token operator">-</span><span class="token operator">-</span>name <span class="token punctuation">:</span>为创建的容器命名。如果不写，会自动分配一个名字（英文人名）
+    <span class="token operator">-</span>v：表示目录映射关系（前者是宿主机目录，后者是容器目录，映射到宿主机上的目录），可以使用多个－v做多个目录或文件映射。注意：最好做目录映射，在宿主机上做修改，然后共享到容器上。
+    <span class="token operator">-</span>p：表示端口映射，前者是宿主机端口，后者是容器内的映射端口。可以使用多个<span class="token operator">-</span>p做多个端口映射
+    <span class="token operator">-</span>e：指定环境变量添加到容器的环境变量
+         <span class="token operator">-</span>e MYSQL_ROOT_PASSWORD<span class="token operator">=</span><span class="token number">123456</span> 把mysql的密码设置成容器的环境变量
+    docker run <span class="token operator">-</span>it <span class="token operator">-</span><span class="token operator">-</span>name<span class="token operator">=</span>myredis redis
+
+ <span class="token comment" spellcheck="true"># 注意，docker run  镜像 如果本地没有，会先pull，再run</span>
+
+<span class="token number">8</span> 进入容器的几种方式（并不是真进入）
+    第一种：docker <span class="token keyword">exec</span> <span class="token operator">-</span>it  容器id <span class="token operator">/</span>bin<span class="token operator">/</span>bash
+        docker <span class="token keyword">exec</span> 容器id ls 
+        <span class="token keyword">exec</span>真正的作用是在容器内执行命令
+    第二种：ssh连接（容器内部装ssh服务端）
+<span class="token number">9</span> 退出
+    exit
+
+<span class="token number">10</span> 文件拷贝
+    <span class="token operator">-</span>从宿主机拷贝到容器内部
+        docker cp lqz<span class="token punctuation">.</span>txt 容器id<span class="token punctuation">:</span><span class="token operator">/</span>home
+    <span class="token operator">-</span>从容器内部拷贝到宿主机
+        docker cp 容器id<span class="token punctuation">:</span><span class="token operator">/</span>home<span class="token operator">/</span>lqz<span class="token punctuation">.</span>txt <span class="token operator">/</span>app
+<span class="token number">11</span> 目录挂载    
+    docker run <span class="token operator">-</span>di <span class="token operator">-</span><span class="token operator">-</span>name<span class="token operator">=</span>mycentos99 <span class="token operator">-</span>v <span class="token operator">/</span>home<span class="token operator">/</span>lqz<span class="token punctuation">:</span><span class="token operator">/</span>home centos<span class="token punctuation">:</span>centos7
+    <span class="token comment" spellcheck="true"># 一旦挂载，以后宿主机目录内修改，同样影响容器内部</span>
+<span class="token number">12</span> 端口映射
+    docker run <span class="token operator">-</span>di <span class="token operator">-</span>p <span class="token number">6377</span><span class="token punctuation">:</span><span class="token number">6379</span> redis<span class="token punctuation">:</span>latest
+
+    <span class="token comment" spellcheck="true"># 了解：/usr/local/bin/docker-entrypoint.sh</span>
+
+<span class="token number">13</span> 查看容器详细信息
+    docker inspect f81
+    <span class="token comment" spellcheck="true"># 查看ip地址</span>
+    docker inspect <span class="token operator">-</span><span class="token operator">-</span>format<span class="token operator">=</span><span class="token string">'{{.NetworkSettings.IPAddress}}'</span> 容器名称（容器ID）</code></pre>
+</div><div id="reward-container"><span class="hty-icon-button button-glow" id="reward-button" title="打赏" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === &quot;none&quot;) ? &quot;block&quot; : &quot;none&quot;;"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-hand-coin-line"></use></svg></span><div id="reward-comment">点我就给你看点有意思的</div><div id="qr" style="display:none;"><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://gitee.com/huang_zhao/hz/raw/master/hz/alipay.png"><img loading="lazy" src="https://gitee.com/huang_zhao/hz/raw/master/hz/alipay.png" alt="支付宝" title="支付宝"></a><div><span style="color:#00A3EE"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-alipay-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://gitee.com/huang_zhao/hz/raw/master/hz/qqpay.jpg"><img loading="lazy" src="https://gitee.com/huang_zhao/hz/raw/master/hz/qqpay.jpg" alt="QQ 支付" title="QQ 支付"></a><div><span style="color:#12B7F5"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-qq-line"></use></svg></span></div></div><div style="display:inline-block"><a target="_blank" rel="noopener" href="https://gitee.com/huang_zhao/hz/raw/master/hz/wxpay.jpg"><img loading="lazy" src="https://gitee.com/huang_zhao/hz/raw/master/hz/wxpay.jpg" alt="微信支付" title="微信支付"></a><div><span style="color:#2DC100"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-wechat-pay-line"></use></svg></span></div></div></div></div><ul class="post-copyright"><li class="post-copyright-author"><strong>本文作者：</strong>爱肖彤真是太好了</li><li class="post-copyright-link"><strong>本文链接：</strong><a href="http://huang_zhao.gitee.io/task/2019/08/15/%E5%85%B6%E4%BB%96/Docker%E5%B8%B8%E7%94%A8%E6%93%8D%E4%BD%9C/" title="Docker常用操作">http://huang_zhao.gitee.io/task/2019/08/15/%E5%85%B6%E4%BB%96/Docker%E5%B8%B8%E7%94%A8%E6%93%8D%E4%BD%9C/</a></li><li class="post-copyright-license"><strong>版权声明：</strong>本博客所有文章除特别声明外，均默认采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="noopener" title="CC BY-NC-SA 4.0 "><svg class="icon"><use xlink:href="#icon-creative-commons-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-by-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-nc-line"></use></svg><svg class="icon"><use xlink:href="#icon-creative-commons-sa-line"></use></svg></a> 许可协议。</li></ul></section></article><div class="post-nav"><div class="post-nav-item"><a class="post-nav-prev" href="/task/2019/09/18/%E5%85%B6%E4%BB%96/Docker%E9%AB%98%E7%BA%A7/" rel="prev" title="Docker高级"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-left-s-line"></use></svg><span class="post-nav-text">Docker高级</span></a></div><div class="post-nav-item"><a class="post-nav-next" href="/task/2019/07/25/python/%E6%A8%A1%E5%9D%97/python%E4%B8%80%E4%BA%9B%E5%AE%9E%E7%94%A8%E7%9A%84%E5%B0%8F%E5%B7%A5%E5%85%B7/" rel="next" title="python一些实用的小工具"><span class="post-nav-text">python一些实用的小工具</span><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-right-s-line"></use></svg></a></div></div></div><div id="comment"><div class="comment-tooltip text-center"></div></div></main><footer class="sidebar-translate" id="footer"><div class="copyright"><span>&copy; 2019 – 2021 </span><span class="with-love" id="animate"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-cloud-line"></use></svg></span><span class="author"> 爱肖彤真是太好了</span></div><div class="powered"><span>由 <a href="https://hexo.io" target="_blank" rel="noopener">Hexo</a> 驱动 v5.1.1</span><span class="footer-separator">|</span><span>主题 - <a rel="noopener" href="https://github.com/YunYouJun/hexo-theme-yun" target="_blank"><span>Yun</span></a> v0.9.7</span></div><div class="live_time"><span>本博客已萌萌哒地运行</span><span id="display_live_time"></span><span class="moe-text">(●'◡'●)</span><script>function blog_live_time() {
+  window.setTimeout(blog_live_time, 1000);
+  const start = new Date('2019-04-12T00:00:00');
+  const now = new Date();
+  const timeDiff = (now.getTime() - start.getTime());
+  const msPerMinute = 60 * 1000;
+  const msPerHour = 60 * msPerMinute;
+  const msPerDay = 24 * msPerHour;
+  const passDay = Math.floor(timeDiff / msPerDay);
+  const passHour = Math.floor((timeDiff % msPerDay) / 60 / 60 / 1000);
+  const passMinute = Math.floor((timeDiff % msPerHour) / 60 / 1000);
+  const passSecond = Math.floor((timeDiff % msPerMinute) / 1000);
+  display_live_time.innerHTML = " " + passDay + " 天 " + passHour + " 小时 " + passMinute + " 分 " + passSecond + " 秒";
+}
+blog_live_time();
+</script></div></footer><a class="hty-icon-button" id="goUp" aria-label="back-to-top" href="#"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-arrow-up-s-line"></use></svg><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><a class="popup-trigger hty-icon-button icon-search" id="search" href="javascript:;" title="搜索"><span class="site-state-item-icon"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-search-line"></use></svg></span></a><script>window.addEventListener("DOMContentLoaded", () => {
+  // Handle and trigger popup window
+  document.querySelector(".popup-trigger").addEventListener("click", () => {
+    document.querySelector(".popup").classList.add("show");
+    setTimeout(() => {
+      document.querySelector(".search-input").focus();
+    }, 100);
+  });
+
+  // Monitor main search box
+  const onPopupClose = () => {
+    document.querySelector(".popup").classList.remove("show");
+  };
+
+  document.querySelector(".popup-btn-close").addEventListener("click", () => {
+    onPopupClose();
+  });
+
+  window.addEventListener("keyup", event => {
+    if (event.key === "Escape") {
+      onPopupClose();
+    }
+  });
+});
+</script><script src="/task/js/search/local-search.js" defer></script><div class="popup search-popup"><div class="search-header"><span class="popup-btn-close close-icon hty-icon-button"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-close-line"></use></svg></span></div><div class="search-input-container"><input class="search-input" id="local-search-input" type="text" placeholder="搜索..." value=""></div><div id="local-search-result"></div></div></div><script defer src="/task/js/utils.js"></script><script defer src="/task/js/hexo-theme-yun.js"></script></body></html>
